@@ -1,0 +1,10 @@
+# prompts/
+
+Codex 슬래시 커맨드 / 명시 호출 프롬프트가 여기에 들어갑니다.
+
+`codex-plugin-builder` 에이전트가 Phase C에서 다음 파일들을 생성합니다:
+- `harness.md` — 메인 트리거 프롬프트
+- `codex-harness-orchestrator.md` — 전체 파이프라인 오케스트레이션
+- 각 에이전트 페르소나 호출 프롬프트 (필요 시)
+
+이 placeholder는 빌드 후 삭제됩니다.

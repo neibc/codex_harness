@@ -1,0 +1,14 @@
+# agents/
+
+Codex 측 에이전트 페르소나 정의가 여기에 들어갑니다 (`.claude/agents/`의 Codex 변환본).
+
+`codex-plugin-builder`가 Phase C에서 다음을 생성:
+- `codex-internals-analyst.md`
+- `claude-harness-cartographer.md`
+- `primitive-translator.md`
+- `codex-plugin-builder.md`
+- `codex-harness-qa.md`
+
+각 파일은 `codex exec --prompt-file agents/<name>.md` 형태로 호출됩니다.
+
+이 placeholder는 빌드 후 삭제됩니다.
