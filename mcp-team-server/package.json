@@ -1,0 +1,28 @@
+{
+  "name": "codex-harness-team-server",
+  "version": "0.1.0",
+  "description": "Agent Team emulation MCP server for codex-harness — provides team_create / send_message / recv_messages / task_* / team_destroy tools backed by SQLite.",
+  "type": "module",
+  "bin": {
+    "team-server": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "prepare": "tsc"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "better-sqlite3": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "Apache-2.0"
+}

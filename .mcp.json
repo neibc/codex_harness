@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "team": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["${CODEX_PLUGIN_ROOT}/mcp-team-server/dist/index.js"],
+      "env": {
+        "TEAM_STORAGE_PATH": "${HOME}/.codex/teams.sqlite"
+      }
+    }
+  }
+}

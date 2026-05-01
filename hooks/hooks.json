@@ -1,0 +1,25 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CODEX_PLUGIN_ROOT}/hooks/session-start-priming.mjs\""
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CODEX_PLUGIN_ROOT}/hooks/session-end-cleanup.mjs\""
+          }
+        ]
+      }
+    ]
+  }
+}
