@@ -21,6 +21,7 @@ metadata:
 2. **에이전트 팀을 기본 실행 모드로 사용한다.** 팀 통신은 MCP team server의 도구 호출로 수행한다.
 3. **AGENTS.md에 하네스 포인터를 등록한다.** — Codex는 cwd의 단일 AGENTS.md만 자동 로드(upward search 없음)하므로 모든 도메인 트리거를 한 파일에 집약한다.
 4. **하네스는 고정물이 아니라 진화하는 시스템이다.** — 매 실행 후 피드백을 반영하고, 에이전트·스킬·AGENTS.md를 지속 갱신한다.
+5. **🚨 종료 직전 사용자에게 트리거링 안내를 반드시 출력한다.** — Codex 0.125.x 심링크 install 경로에서는 슬래시 명령(`/<name>`)이 노출되지 않아 **유일한 진입점은 사용자가 직접 입력하는 자연어 발화**다. 구성한 하네스를 다시 어떻게 부르는지(자연어 트리거 + `codex exec` + 활성화 검증)를 출력하지 않으면 사용자는 새로 만든 하네스를 영원히 못 찾는다. 자세한 출력 템플릿은 본 문서 하단 "**🚨 종료 단계 — 트리거링 안내 출력**" 참조 (Phase 7 종료 후 즉시 실행, 산출물 체크리스트 검증 전).
 
 ## 워크플로우
 
@@ -408,28 +409,15 @@ Phase마다 다른 모드를 섞어 구성한다. 자주 쓰이는 조합:
 
 **Step 4: 변경 검증** — Phase 6-1 구조 검증 → 트리거 영향 시 6-4 검증 → 대규모 변경 시 6-3, 6-5까지 수행.
 
-## Codex MCP 팀 서버 도구 — 빠른 참조
+> **🚨 다음 단계 (필수, 건너뛰지 말 것)**: Phase 7이 끝났으면 **즉시 아래 "🚨 종료 단계 — 트리거링 안내 출력" 섹션의 템플릿을 사용자에게 출력**한다. 이것을 출력하지 않고 응답을 마치면 사용자는 방금 만든 하네스를 다시 호출할 방법을 모른 채 끝난다. 운영/유지보수 작업(Phase 7-5)에서도 마찬가지로 변경 후 트리거 발화가 달라졌다면 갱신된 안내를 다시 출력한다.
 
-본 플러그인은 `mcp-team-server/`를 통해 8개 도구를 자동 등록한다(`.mcp.json`). prompt 본문에서 직접 호출:
+## 🚨 종료 단계 — 트리거링 안내 출력 (필수, 모든 하네스 구성/수정/감사 후)
 
-| 도구 | 용도 | 예시 |
-|---|---|---|
-| `team_create({team_name, members, leader?})` | 팀 생성 | `team_create({team_name:"design", members:["a","b"]})` → `{team_id}` |
-| `send_message({team_id, from, to, content, tags?})` | 메시지 송신 (push) | 수신자 명시 또는 `to:"*"` 브로드캐스트 |
-| `recv_messages({team_id, as, since?, limit?})` | 메시지 수신 (polling) | 매 turn 시작 시 호출 — 폴링 인터벌 1~10s |
-| `task_create({team_id, subject, description?, owner?, blocked_by?})` | 작업 생성 | status는 자동으로 `pending` |
-| `task_update({team_id, task_id, status?, owner?, metadata?})` | 작업 갱신 | status 전이는 history 에 자동 기록 |
-| `task_list({team_id, status?, owner?})` | 작업 목록 조회 | 종료 폴링용 |
-| `task_get_output({team_id, task_id})` | 작업 산출물 회수 | metadata.output 반환 |
-| `team_destroy({team_id, archive?})` | 팀 정리 | `archive:true`(기본)는 sqlite에 status=archived |
+**모든 워크플로우는 이 단계로 마무리한다.** 신규 구성, 부분 재실행, 운영/유지보수 변경, 어떤 경우든 사용자 응답을 끝내기 전에 반드시 아래 템플릿을 채워서 출력한다.
 
-> 폴링 패턴 상세는 `references/orchestrator-template.md` 본문 참조.
+Codex 0.125.x 심링크 install 경로에서는 슬래시 명령(`/<name>`)이 노출되지 않으므로 **사용자가 새로 만든/수정한 하네스를 다시 호출할 수 있는 유일한 경로는 자연어 발화 + 비대화형 `codex exec`**다. 이 안내를 누락하면 작업이 미완 상태로 끝난다.
 
-## 사용자에게 트리거링 안내 — 필수
-
-**하네스 구성을 종료하기 직전에 반드시 사용자에게 다음을 출력하라.** Codex 0.125.0의 심링크 install 경로에서는 슬래시 명령(`/<name>`)이 노출되지 않으므로 **유일한 진입점은 자연어 트리거 발화 + 비대화형 `codex exec`**다. 사용자가 새로 만든 하네스를 어떻게 다시 실행하는지 모른 채 끝나면 안 된다.
-
-출력 템플릿 (한국어와 영어 둘 다):
+출력 템플릿:
 
 ```markdown
 ## ✅ 하네스 구성 완료 — 이제 어떻게 트리거하나요?
@@ -460,22 +448,41 @@ codex debug prompt-input "x" 2>/dev/null | grep -o '<orchestrator-skill-name>:[^
 이 하네스는 다중 에이전트 협업을 위해 codex-harness의 MCP 팀 서버를 사용합니다. 등록되어 있지 않다면:
 \`\`\`bash
 codex mcp add team --env TEAM_STORAGE_PATH=$HOME/.codex/teams.sqlite \\
-  -- node "/path/to/codex_harness/mcp-team-server/dist/index.js"
+  -- node "<codex_harness 설치 경로>/mcp-team-server/dist/index.js"
 \`\`\`
 ```
 
-**원칙:**
-- `<orchestrator-skill-name>`, `<도메인명>`, `<대표 작업>`은 실제 이 세션에서 생성한 값으로 치환한다.
+**작성 원칙:**
+- `<orchestrator-skill-name>`, `<도메인명>`, `<대표 작업>`은 실제 이번 세션에서 생성/수정한 값으로 치환한다.
 - 트리거 발화는 사용자가 그대로 복사해 붙여 즉시 작동해야 한다 — 추상적 표현 금지.
 - AGENTS.md의 description과 일치하는 키워드를 자연어 트리거에 포함하라(트리거 매칭률 ↑).
+- 부분 재실행/운영 변경의 경우, "달라진 발화"만 강조해 다시 안내해도 된다 — 사용자가 무엇을 새로 외울지 명확히 보이도록.
 - 영어로도 동일 안내를 짧게 추가하면 다국어 사용자에게 도움이 된다 (선택).
 
 > 이 단계를 건너뛰면 사용자가 구성된 하네스를 영원히 못 찾을 수 있다. revfactory 원본 플러그인의 종료 안내를 Codex 환경에 맞춰 자연어 트리거 우선으로 변형한 결과다.
 
+## Codex MCP 팀 서버 도구 — 빠른 참조
+
+본 플러그인은 `mcp-team-server/`를 통해 8개 도구를 자동 등록한다(`.mcp.json`). prompt 본문에서 직접 호출:
+
+| 도구 | 용도 | 예시 |
+|---|---|---|
+| `team_create({team_name, members, leader?})` | 팀 생성 | `team_create({team_name:"design", members:["a","b"]})` → `{team_id}` |
+| `send_message({team_id, from, to, content, tags?})` | 메시지 송신 (push) | 수신자 명시 또는 `to:"*"` 브로드캐스트 |
+| `recv_messages({team_id, as, since?, limit?})` | 메시지 수신 (polling) | 매 turn 시작 시 호출 — 폴링 인터벌 1~10s |
+| `task_create({team_id, subject, description?, owner?, blocked_by?})` | 작업 생성 | status는 자동으로 `pending` |
+| `task_update({team_id, task_id, status?, owner?, metadata?})` | 작업 갱신 | status 전이는 history 에 자동 기록 |
+| `task_list({team_id, status?, owner?})` | 작업 목록 조회 | 종료 폴링용 |
+| `task_get_output({team_id, task_id})` | 작업 산출물 회수 | metadata.output 반환 |
+| `team_destroy({team_id, archive?})` | 팀 정리 | `archive:true`(기본)는 sqlite에 status=archived |
+
+> 폴링 패턴 상세는 `references/orchestrator-template.md` 본문 참조.
+
 ## 산출물 체크리스트
 
-생성 완료 후 확인:
+생성 완료 후 확인 (가장 먼저 트리거 안내 출력 여부 확인):
 
+- [ ] **🚨 종료 직전 사용자에게 트리거링 안내 출력 완료** — 자연어 트리거 + 비대화형 `codex exec` + 활성화 확인 명령. 위 "🚨 종료 단계 — 트리거링 안내 출력" 섹션의 템플릿 사용. **누락 시 작업 미완.**
 - [ ] `프로젝트/agents/` — **에이전트 정의 파일 필수 생성**
 - [ ] `프로젝트/skills/` — 스킬 파일들 (SKILL.md + references/)
 - [ ] 오케스트레이터 스킬 1개 (데이터 흐름 + 에러 핸들링 + 테스트 시나리오 포함)
@@ -489,7 +496,6 @@ codex mcp add team --env TEAM_STORAGE_PATH=$HOME/.codex/teams.sqlite \\
 - [ ] **AGENTS.md에 하네스 포인터 + 라우팅 표 + MCP 도구 표 등록**
 - [ ] **AGENTS.md 변경 이력에 에이전트/스킬 추가/삭제/수정 기록**
 - [ ] **오케스트레이터 Phase 1에 컨텍스트 확인 단계** (초기/후속/부분 재실행 판별)
-- [ ] **종료 직전 사용자에게 자연어 트리거 + 슬래시 + 비대화형 명령 + 활성화 확인 명령을 출력했음** (위 "사용자에게 트리거링 안내" 섹션의 템플릿 사용)
 
 ## 참고
 
