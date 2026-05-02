@@ -133,7 +133,7 @@ skill-name/
 
 #### 4-2. Description 작성 — 적극적 트리거 유도
 
-Codex의 description 자동 매칭 강도는 Claude 대비 Unknown이므로, **슬래시 트리거(`/<name>`)와 비대화형 호출(`codex exec --prompt-file`) 양쪽을 모두 명시**한다.
+Codex 0.125.0의 심링크 install 경로(`~/.codex/skills/<name>/`)에서는 **슬래시 명령이 노출되지 않는다** — 슬래시는 플러그인 정식 install(TUI 경유 `commands/<name>.md` 등록) 경로에서만 작동. 따라서 Codex 사용자에게는 **자연어 트리거 발화와 비대화형 호출(`codex exec --prompt-file`)을 명시**하라. description은 자연어 매칭이 잘 일어나도록 적극적("pushy")으로 작성한다.
 
 **나쁜 예:** `"PDF 문서를 처리하는 스킬"`
 **좋은 예:** `"PDF 파일 읽기, 텍스트/테이블 추출, 병합, 분할, 회전, 워터마크, 암호화, OCR 등 모든 PDF 작업을 수행. .pdf 파일을 언급하거나 PDF 산출물을 요청하면 반드시 이 스킬을 사용할 것."`
@@ -311,7 +311,7 @@ Phase마다 다른 모드를 섞어 구성한다. 자주 쓰이는 조합:
 1. **Should-trigger 쿼리** (8~10개) — 스킬을 트리거해야 하는 다양한 표현
 2. **Should-NOT-trigger 쿼리** (8~10개) — near-miss 쿼리
 
-> Codex의 자동 트리거 매칭 강도는 Claude 대비 Unknown — 실측한 만큼 슬래시 + `codex exec --prompt-file` 양쪽 호출이 모두 동작하는지 확인하라.
+> Codex 0.125.0 심링크 install 경로에서는 슬래시 명령이 노출되지 않는다. 자연어 매칭 + `codex exec --prompt-file` 양쪽이 모두 동작하는지 확인한다. 활성화 검증: `codex debug prompt-input "x" 2>/dev/null | grep -o '<skill-name>:[^"]*' | head -1`.
 
 #### 6-5. 드라이런 테스트
 
@@ -383,7 +383,7 @@ Phase마다 다른 모드를 섞어 구성한다. 자주 쓰이는 조합:
 
 ## 사용자에게 트리거링 안내 — 필수
 
-**하네스 구성을 종료하기 직전에 반드시 사용자에게 다음을 출력하라.** Codex 환경에서는 `/<skill-name>` 슬래시가 항상 표시되지 않으므로, **자연어 트리거 발화**가 가장 신뢰할 수 있는 진입점이다. 사용자가 새로 만든 하네스를 어떻게 다시 실행하는지 모른 채 끝나면 안 된다.
+**하네스 구성을 종료하기 직전에 반드시 사용자에게 다음을 출력하라.** Codex 0.125.0의 심링크 install 경로에서는 슬래시 명령(`/<name>`)이 노출되지 않으므로 **유일한 진입점은 자연어 트리거 발화 + 비대화형 `codex exec`**다. 사용자가 새로 만든 하네스를 어떻게 다시 실행하는지 모른 채 끝나면 안 된다.
 
 출력 템플릿 (한국어와 영어 둘 다):
 
@@ -392,14 +392,13 @@ Phase마다 다른 모드를 섞어 구성한다. 자주 쓰이는 조합:
 
 생성된 하네스: `<orchestrator-skill-name>` (위치: `skills/<orchestrator-skill-name>/SKILL.md` 또는 `~/.codex/skills/<orchestrator-skill-name>/`)
 
-### 자연어 트리거 (권장)
-다음 발화 중 하나로 활성화됩니다 (Codex 인터랙티브 / 비대화형 모두):
+### 자연어 트리거 (인터랙티브 — 1차 진입)
+Codex 인터랙티브에서 다음 발화 중 하나를 입력하세요:
 - "**<도메인명>의 <대표 작업>을 해줘**" — 예: "전자상거래 백엔드 리뷰해줘"
 - "**<오케스트레이터의 핵심 동사구>**" — 예: "결제 모듈 보안 감사 돌려줘"
 - "**<직접 스킬 이름 호명>**" — 예: "<orchestrator-skill-name> 실행해줘"
 
-### 슬래시 트리거 (Codex가 표시하는 경우)
-- `/<orchestrator-skill-name>` — 슬래시 자동완성에 안 보이면 자연어 트리거 사용
+> Codex 0.125.0 심링크 install 경로에서는 `/<orchestrator-skill-name>` 같은 슬래시 명령이 노출되지 않습니다. 위 자연어 발화로만 트리거됩니다.
 
 ### 비대화형 (스크립트/CI)
 \`\`\`bash

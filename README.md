@@ -12,16 +12,15 @@
 
 ## TL;DR
 
-설치 후 `codex` 안에서 **자연어로 트리거**합니다. Codex 인터랙티브 모드에서 `/harness` 슬래시 자동완성이 안 보이는 경우가 자주 있는데 — **"하네스를 구성해줘"** 라고 그냥 말하면 플러그인이 활성화됩니다.
+설치 후 `codex` 안에서 **자연어로 트리거**합니다. Codex 0.125.0의 슬래시 명령(`/<name>`)은 플러그인 정식 install 경로(TUI)를 거쳐야 등록되는 별개 메커니즘이라 본 저장소의 심링크 install 경로에서는 노출되지 않습니다. 대신 **"하네스를 구성해줘"** 라고 그냥 말하면 스킬의 description이 매칭되어 활성화됩니다.
 
 ```
 $ codex
 > 하네스를 구성해줘
-> /harness  (슬래시가 보이는 환경에서)
 > build a harness for an e-commerce backend
 ```
 
-세 발화 모두 같은 7-Phase 워크플로우(도메인 분석 → 팀 설계 → 에이전트/스킬 자동 생성 → 검증)로 진입합니다.
+두 발화 모두 같은 7-Phase 워크플로우(도메인 분석 → 팀 설계 → 에이전트/스킬 자동 생성 → 검증)로 진입합니다.
 
 ---
 
@@ -58,17 +57,16 @@ codex debug prompt-input "x" 2>/dev/null | grep -o 'harness:[^"]*' | head -1
 
 ---
 
-## 트리거 — 자연어가 1차 진입점
+## 트리거 — 자연어 발화로만 활성화
 
 | 환경 | 작동하는 트리거 |
 |---|---|
-| Codex 인터랙티브 — 일반 | **"하네스를 구성해줘"**, "하네스 점검해줘", "harness build for ..." 등의 자연어 |
-| Codex 인터랙티브 — 슬래시 자동완성이 보일 때 | `/harness` |
+| Codex 인터랙티브 | **"하네스를 구성해줘"**, "하네스 점검해줘", "build a harness for ..." 등의 자연어 |
 | 비대화형 / CI | `codex exec --prompt-file skills/harness/SKILL.md "<요청>"` |
 
-> **왜 자연어를 권장하나**: Codex 0.125.0은 슬래시 자동완성이 항상 동작하지 않습니다. 그러나 SKILL.md의 description에 매칭되는 자연어가 들어오면 동일하게 활성화됩니다. **이 점이 revfactory 원본(Claude Code)과 가장 큰 차이**입니다.
+> **슬래시 명령은 지원하지 않습니다.** Codex 0.125.0에서 슬래시 명령(예: `/<name>`)은 플러그인 정식 install(`commands/<name>.md` + TUI 등록) 경로에서만 노출되며, 본 저장소의 심링크 install 경로(`~/.codex/skills/harness`)는 **스킬(skills) 메커니즘**만 사용합니다. 스킬은 슬래시가 아닌 description 자연어 매칭으로 활성화됩니다. 이 점이 revfactory 원본(Claude Code, 슬래시·자연어 모두 가능)과 가장 큰 차이입니다.
 
-추가 트리거 키워드: `하네스 구성/구축/설계/엔지니어링/점검/감사/현황`, `에이전트/스킬 동기화`, `agent team`, `skill architect`.
+활성화에 매칭되는 자연어 키워드(SKILL.md description 발췌): `하네스 구성/구축/설계/엔지니어링/점검/감사/현황`, `에이전트/스킬 동기화`, `harness`, `agent team`, `skill architect`.
 
 ---
 
@@ -191,7 +189,7 @@ SKILL.md의 7-Phase 워크플로우 진입
 
 `codex_harness` ports `revfactory/harness` (a Claude Code meta-skill that auto-designs agent teams + skills for any domain) to OpenAI Codex CLI. Codex lacks first-class multi-agent primitives, so the port emulates `TeamCreate` / `SendMessage` / `Task*` through a small stdio MCP server backed by SQLite (WAL).
 
-After installation, **trigger with natural language** ("build a harness for ...") rather than relying on a slash command — Codex 0.125.0 does not always surface `/harness` in its slash autocomplete, but the skill's description matches the request and activates the same 7-Phase workflow regardless.
+After installation, **trigger with natural language** ("build a harness for ..."). Codex 0.125.0's slash command surface (`/<name>`) is gated behind plugin marketplace install via the TUI, which the symlink-based install path used here does not exercise. Skills are activated through description matching instead — say what you want and the same 7-Phase workflow is loaded.
 
 Lossy translations are documented in [`LIMITATIONS.md`](LIMITATIONS.md) (10 items: polling vs. push delivery, missing subagent categories, no built-in WebFetch/WebSearch, hook events still unverified in 0.125.0).
 
@@ -227,7 +225,7 @@ codex_harness/
 
 | 증상 | 원인 / 해결 |
 |---|---|
-| `/harness` 슬래시가 안 보임 | 정상 — Codex 0.125.0은 슬래시를 항상 표시하지 않음. **"하네스를 구성해줘"** 자연어로 트리거 |
+| 자연어 발화에 스킬이 응답 안 함 | 활성화 누락. `~/.codex/skills/harness` 심링크 존재 확인 + `codex debug prompt-input "x" \| grep harness:harness` 로 검증 |
 | `codex mcp list`가 비어 있음 | Step 3 누락. `codex mcp add team ...` 실행 |
 | 자연어로도 활성화 안 됨 | Step 4 누락. `~/.codex/skills/harness` 심링크 확인 |
 | 활성화 검증 | `codex debug prompt-input "x" 2>/dev/null \| grep -o 'harness:[^"]*' \| head -1` |
