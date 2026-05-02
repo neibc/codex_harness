@@ -140,6 +140,34 @@ codex exec "전자상거래 백엔드용 하네스를 구성해줘"
 
 10개 손실 항목 전체: [LIMITATIONS.md](LIMITATIONS.md).
 
+### 솔직한 안내 — Codex의 작업 분화/깊이 격차 / Honest note on output depth
+
+**KR**: 같은 메타-스킬(SKILL.md)과 같은 프롬프트를 받아도 **Codex(GPT-5.x)는 Claude(Opus)보다 작업을 단순하게 처리하는 경향**이 있습니다. 실측에서 동일한 7-Phase 워크플로우를 받았을 때 Codex는 phase를 더 적게 펼치고, 각 phase의 본문을 짧게 끝냈습니다 (보고서 단어 수 14.9×, 중간 산출물 분량 29×, 변증법/대안 검토 키워드 ∞ 격차 — `~/codexwork/leehongjang` vs `~/claudework/saju` 비교, 자세히는 [LIMITATIONS.md #11](LIMITATIONS.md)).
+
+본 플러그인은 이 격차를 좁히기 위해 SKILL.md 본문 옆에 **3개의 "Codex 환경 안내" 박스**를 부착했습니다 (Phase 2/3/6) — 작업 분화/단서/도메인별 검토 가이드. 그러나 **이 정비로 격차가 완전히 메워지지는 않습니다** — 모델 자체의 보수성, `WebFetch`/`WebSearch` 빌트인 부재, multi-agent 1차 primitive 부재 같은 환경 한계는 SKILL.md 변경으로 해결 불가입니다. revfactory 원본의 추상화를 보존하기로 한 결정 때문에, 분량/구조 강제(Goodhart 함정)도 의도적으로 거부했습니다.
+
+가장 효과적인 보완은 **사용자의 명시 발화**입니다:
+- "**변증법 phase 추가**" / "**양측 입장 steelman 분석**" — 비판적 검토 도메인
+- "**산출물 sub-item을 도메인 맞게 구체 분해**" — phase 본문이 짧을 때
+- "**작업 원칙에 'Why' + 안 했을 때 문제 함께**" — 에이전트 정의가 빈약할 때
+- "**최종 보고서 ≥N 섹션, ≥N 인용**" — 분량/근거 요구 시 (단, 모델 부풀림 가능성 인지)
+
+위 4가지 발화 중 도메인에 맞는 것을 하네스 구성 요청과 함께 보내면 격차가 부분적으로 좁혀집니다. **Claude 수준의 자율적 깊이는 현 환경에서 도달하기 어렵다**는 점이 본 포팅의 정직한 한계입니다.
+
+---
+
+**EN**: Given the **same** meta-skill (SKILL.md) and prompt, **Codex (GPT-5.x) tends to handle the task more simply than Claude (Opus)** — it splits the work into fewer phases and writes shorter bodies under each phase. In a real comparison (`~/codexwork/leehongjang` on Codex vs `~/claudework/saju` on Claude with the same upstream meta-skill), Codex produced a final report **14.9× shorter** (in words) and **29× less** intermediate workspace content; dialectic / counter-argument keywords appeared 7 times in saju but **0 times** in leehongjang ([LIMITATIONS.md #11](LIMITATIONS.md)).
+
+To narrow this gap, the plugin attaches **three "Codex 환경 안내" callout boxes** to SKILL.md (Phases 2 / 3 / 6) — guidance on work decomposition, agent-definition cues, and domain-specific review. **These callouts do not fully close the gap.** The remaining causes (model conservatism, no built-in `WebFetch`/`WebSearch`, no first-class multi-agent primitive) are environment limits that no amount of SKILL.md editing can fix. We also intentionally rejected length/structure quotas (Goodhart's-Law trap), and we preserve revfactory's original abstractions, so the patches are deliberately conservative.
+
+The most effective complement is **explicit user phrasing** at request time:
+- "**Add a dialectic phase**" / "**steelman both sides**" — for domains where critical review matters
+- "**Decompose each artifact into concrete sub-items for this domain**" — when phase bodies look thin
+- "**Each work principle: include the why + the consequence of skipping**" — when agent definitions look thin
+- "**Final report should have ≥N sections and ≥N citations**" — when length/grounding matters (with Goodhart caveat)
+
+Combine the relevant phrasing above with your harness request, and the gap narrows. **Reaching Claude's level of autonomous depth is currently out of reach** — that's the honest limit of this port.
+
 ---
 
 
