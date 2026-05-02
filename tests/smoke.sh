@@ -31,7 +31,6 @@ for f in \
   ".codex-plugin/plugin.json" \
   ".agents/plugins/marketplace.json" \
   ".mcp.json" \
-  "hooks/hooks.json" \
   "AGENTS.md" \
   "LIMITATIONS.md" \
   "README.md" \
@@ -46,7 +45,7 @@ done
 echo "[3/7] plugin.json 필수 필드 (jq 가능 시)"
 PLUGIN_JSON="$HERE/.codex-plugin/plugin.json"
 if command -v jq >/dev/null 2>&1; then
-  for k in name version description skills hooks mcpServers license; do
+  for k in name version description skills mcpServers license; do
     if [ "$(jq -r --arg k "$k" 'has($k)' "$PLUGIN_JSON")" = "true" ]; then
       pass "plugin.json has key: $k"
     else
@@ -54,9 +53,8 @@ if command -v jq >/dev/null 2>&1; then
     fi
   done
 else
-  # node fallback
   if command -v node >/dev/null 2>&1; then
-    if node -e "const m=require('$PLUGIN_JSON'); for(const k of ['name','version','description','skills','hooks','mcpServers','license']){if(!(k in m)){console.error('missing:',k);process.exit(1)}}"; then
+    if node -e "const m=require('$PLUGIN_JSON'); for(const k of ['name','version','description','skills','mcpServers','license']){if(!(k in m)){console.error('missing:',k);process.exit(1)}}"; then
       pass "plugin.json has all required keys (node check)"
     else
       fail "plugin.json missing required keys"
@@ -66,7 +64,7 @@ else
   fi
 fi
 
-echo "[4/7] skills/ + agents/ 트리"
+echo "[4/7] skills/ 트리"
 test -f "$HERE/skills/harness/SKILL.md" && pass "skills/harness/SKILL.md exists" || fail "skills/harness/SKILL.md missing"
 for ref in agent-design-patterns.md orchestrator-template.md team-examples.md \
            skill-writing-guide.md skill-testing-guide.md qa-agent-guide.md; do
@@ -74,14 +72,6 @@ for ref in agent-design-patterns.md orchestrator-template.md team-examples.md \
     pass "skills/harness/references/$ref"
   else
     fail "skills/harness/references/$ref missing"
-  fi
-done
-for a in codex-internals-analyst claude-harness-cartographer primitive-translator \
-         codex-plugin-builder codex-harness-qa; do
-  if [ -f "$HERE/agents/$a.md" ]; then
-    pass "agents/$a.md"
-  else
-    fail "agents/$a.md missing"
   fi
 done
 

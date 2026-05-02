@@ -365,6 +365,53 @@ Phase마다 다른 모드를 섞어 구성한다. 자주 쓰이는 조합:
 
 > 폴링 패턴 상세는 `references/orchestrator-template.md` 본문 참조.
 
+## 사용자에게 트리거링 안내 — 필수
+
+**하네스 구성을 종료하기 직전에 반드시 사용자에게 다음을 출력하라.** Codex 환경에서는 `/<skill-name>` 슬래시가 항상 표시되지 않으므로, **자연어 트리거 발화**가 가장 신뢰할 수 있는 진입점이다. 사용자가 새로 만든 하네스를 어떻게 다시 실행하는지 모른 채 끝나면 안 된다.
+
+출력 템플릿 (한국어와 영어 둘 다):
+
+```markdown
+## ✅ 하네스 구성 완료 — 이제 어떻게 트리거하나요?
+
+생성된 하네스: `<orchestrator-skill-name>` (위치: `skills/<orchestrator-skill-name>/SKILL.md` 또는 `~/.codex/skills/<orchestrator-skill-name>/`)
+
+### 자연어 트리거 (권장)
+다음 발화 중 하나로 활성화됩니다 (Codex 인터랙티브 / 비대화형 모두):
+- "**<도메인명>의 <대표 작업>을 해줘**" — 예: "전자상거래 백엔드 리뷰해줘"
+- "**<오케스트레이터의 핵심 동사구>**" — 예: "결제 모듈 보안 감사 돌려줘"
+- "**<직접 스킬 이름 호명>**" — 예: "<orchestrator-skill-name> 실행해줘"
+
+### 슬래시 트리거 (Codex가 표시하는 경우)
+- `/<orchestrator-skill-name>` — 슬래시 자동완성에 안 보이면 자연어 트리거 사용
+
+### 비대화형 (스크립트/CI)
+\`\`\`bash
+codex exec --prompt-file skills/<orchestrator-skill-name>/SKILL.md "<요청>"
+\`\`\`
+
+### 활성화 확인
+\`\`\`bash
+codex debug prompt-input "x" 2>/dev/null | grep -o '<orchestrator-skill-name>:[^"]*' | head -1
+# 출력이 보이면 활성화 완료
+\`\`\`
+
+### MCP 팀 서버
+이 하네스는 다중 에이전트 협업을 위해 codex-harness의 MCP 팀 서버를 사용합니다. 등록되어 있지 않다면:
+\`\`\`bash
+codex mcp add team --env TEAM_STORAGE_PATH=$HOME/.codex/teams.sqlite \\
+  -- node "/path/to/codex_harness/mcp-team-server/dist/index.js"
+\`\`\`
+```
+
+**원칙:**
+- `<orchestrator-skill-name>`, `<도메인명>`, `<대표 작업>`은 실제 이 세션에서 생성한 값으로 치환한다.
+- 트리거 발화는 사용자가 그대로 복사해 붙여 즉시 작동해야 한다 — 추상적 표현 금지.
+- AGENTS.md의 description과 일치하는 키워드를 자연어 트리거에 포함하라(트리거 매칭률 ↑).
+- 영어로도 동일 안내를 짧게 추가하면 다국어 사용자에게 도움이 된다 (선택).
+
+> 이 단계를 건너뛰면 사용자가 구성된 하네스를 영원히 못 찾을 수 있다. revfactory 원본 플러그인의 종료 안내를 Codex 환경에 맞춰 자연어 트리거 우선으로 변형한 결과다.
+
 ## 산출물 체크리스트
 
 생성 완료 후 확인:
@@ -382,6 +429,7 @@ Phase마다 다른 모드를 섞어 구성한다. 자주 쓰이는 조합:
 - [ ] **AGENTS.md에 하네스 포인터 + 라우팅 표 + MCP 도구 표 등록**
 - [ ] **AGENTS.md 변경 이력에 에이전트/스킬 추가/삭제/수정 기록**
 - [ ] **오케스트레이터 Phase 1에 컨텍스트 확인 단계** (초기/후속/부분 재실행 판별)
+- [ ] **종료 직전 사용자에게 자연어 트리거 + 슬래시 + 비대화형 명령 + 활성화 확인 명령을 출력했음** (위 "사용자에게 트리거링 안내" 섹션의 템플릿 사용)
 
 ## 참고
 
