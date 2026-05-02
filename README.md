@@ -236,6 +236,66 @@ codex_harness/
 
 ---
 
+## 업데이트 / Update
+
+### 자동화 스크립트 — 1줄로 끝
+
+```bash
+cd /path/to/codex_harness
+./bin/update.sh
+```
+
+스크립트가 다음을 자동 수행 (각 단계 진행 표시):
+
+1. `git fetch` + 신규 커밋 요약 (없으면 즉시 종료)
+2. fast-forward `git pull` (uncommitted 변경 있으면 안전하게 중단)
+3. `mcp-team-server` 의존성/빌드 갱신 (변경 감지 시에만 `npm install`)
+4. `codex mcp list` + `codex debug prompt-input`으로 활성화 검증
+5. 마켓플레이스 등록되어 있다면 `codex plugin marketplace upgrade` 실행
+
+옵션:
+- `./bin/update.sh --check` — pull 안 하고 변경 사항만 미리 확인
+- `./bin/update.sh --skip-build` — mcp-team-server 재빌드 생략 (스킬 텍스트만 바뀌었을 때)
+
+### 자동 트리거 — cron / launchd
+
+매일 한 번 또는 매 시간 자동 업데이트:
+
+```bash
+# crontab -e
+0 9 * * * cd /path/to/codex_harness && ./bin/update.sh --no-color >> ~/.codex/codex_harness-update.log 2>&1
+```
+
+macOS launchd로 변환은 [`launchd.plist` 가이드](https://www.launchd.info/) 참조.
+
+### 무엇이 자동 반영되는가
+
+설치 시 `~/.codex/skills/harness`를 **심볼릭 링크**로 만들었기 때문에 다음은 `git pull`만으로 즉시 반영됩니다 — 별도 빌드 / 재시작 불필요:
+
+| 변경 | 사용자 추가 작업 |
+|---|---|
+| `skills/harness/SKILL.md`, `references/*` | **없음** (다음 codex 세션에서 자동 반영) |
+| `AGENTS.md`, `README.md`, `LIMITATIONS.md` | 없음 |
+| `.codex-plugin/plugin.json`, `.mcp.json`, `.agents/...` | 없음 (0.125.0 forward-compat schema) |
+| `mcp-team-server/src/*.ts` | **`bin/update.sh` 또는 `npm run build` 1회** |
+| MCP 도구 인터페이스 추가/제거 | 위 + 진행 중인 codex 세션 재시작 |
+
+### EN — Update
+
+A single command keeps the install in sync:
+
+```bash
+cd /path/to/codex_harness && ./bin/update.sh
+```
+
+The script handles git fetch → fast-forward pull → conditional npm install → tsc build → activation verification → marketplace upgrade. Use `--check` for dry-run, `--skip-build` when only docs/skill text changed.
+
+For unattended updates, add a cron entry: `0 9 * * * cd /path/to/codex_harness && ./bin/update.sh --no-color >> ~/.codex/codex_harness-update.log 2>&1`.
+
+Because the skill is installed as a symlink to `~/.codex/skills/harness`, edits to `skills/harness/**` flow through immediately on the next codex session — no build, no re-register. Only `mcp-team-server/src/*.ts` changes require a rebuild, which the script does automatically.
+
+---
+
 ## 제거 / Uninstall
 
 ```bash
