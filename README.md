@@ -25,29 +25,32 @@
 
 ## 🎬 30초 예시 / 30-second example
 
-빈 Express 백엔드 프로젝트에서 시작 → `codex` 진입 → "하네스를 구성해줘" → 본 플러그인이 자동 생성:
+빈 작업 디렉토리에서 시작 → `codex` 진입 → "**AI 빅테크 3사의 올해 신제품/신상품 로드맵 보고서를 작성하는 하네스를 구성해줘**" → 본 플러그인이 자동 생성:
 
 ```
-my-project/
+ai-roadmap-research/
 ├── agents/
-│   ├── backend-architect.md      ← API 스펙·라우팅·DB 설계
-│   ├── api-tester.md             ← 통합 테스트 시나리오
-│   └── docs-maintainer.md        ← README/OpenAPI 갱신
+│   ├── market-researcher.md            ← 공식 발표·블로그·뉴스 자료 수집
+│   ├── product-cataloger.md            ← 신제품/업데이트 카탈로그 분류
+│   ├── roadmap-analyst.md              ← 3사 비교 분석 (시기·카테고리)
+│   └── report-writer.md                ← 종합 보고서 작성
 ├── skills/
-│   ├── api-change/SKILL.md       ← 라우트 추가/변경 워크플로우
-│   └── test-generation/SKILL.md  ← 테스트 자동 생성 패턴
-└── AGENTS.md                     ← 도메인 트리거 + 라우팅 표
+│   ├── tech-source-discovery/SKILL.md  ← 신뢰 가능한 출처 탐색 워크플로우
+│   └── comparative-roadmap/SKILL.md    ← 3사 비교 분석 패턴
+└── AGENTS.md                           ← 도메인 트리거 + 라우팅 표
 ```
 
-다음부터 같은 cwd에서 `codex` 진입 후:
+이후 같은 cwd에서:
 
 ```
-> POST /users 엔드포인트 추가해줘
+> OpenAI 11월 발표를 추가해서 다시 작성해줘
 ```
 
-→ AGENTS.md 라우팅이 발동 → `backend-architect` (스펙 작성) → `api-tester` (테스트 추가) → `docs-maintainer` (README 갱신) 순서로 자동 실행.
+→ AGENTS.md 라우팅 → `market-researcher` (신규 자료 수집) → `product-cataloger` (카탈로그 갱신) → `roadmap-analyst` (비교 재분석) → `report-writer` (보고서 재작성) 순서로 자동 실행.
 
-비교용 텍스트 산출물 예시는 [`examples/node-cli/`](examples/node-cli/) 참조.
+> **외부 자료 수집이 핵심인 도메인 주의**: Codex CLI에는 `WebFetch`/`WebSearch` 빌트인이 없습니다. 위 예시처럼 외부 자료가 중심이라면 하네스 구성 전에 외부 MCP 서버를 미리 등록하세요 — 예: `codex mcp add fetch -- npx -y @modelcontextprotocol/server-fetch`. 등록하지 않으면 자료 수집 phase가 표면적으로 끝나 보고서 깊이가 떨어집니다 (자세히는 [LIMITATIONS.md #3, #11](LIMITATIONS.md), 본 README 하단 "솔직한 안내" 섹션).
+
+코드 도메인 (Express 백엔드) 예시는 [`examples/node-cli/`](examples/node-cli/) 참조.
 
 ---
 
