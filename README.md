@@ -48,7 +48,7 @@ ai-roadmap-research/
 
 → AGENTS.md 라우팅 → `market-researcher` (신규 자료 수집) → `product-cataloger` (카탈로그 갱신) → `roadmap-analyst` (비교 재분석) → `report-writer` (보고서 재작성) 순서로 자동 실행.
 
-> **외부 자료 수집이 핵심인 도메인 주의**: Codex CLI에는 `WebFetch`/`WebSearch` 빌트인이 없습니다. 위 예시처럼 외부 자료가 중심이라면 하네스 구성 전에 외부 MCP 서버를 미리 등록하세요 — 예: `codex mcp add fetch -- npx -y @modelcontextprotocol/server-fetch`. 등록하지 않으면 자료 수집 phase가 표면적으로 끝나 보고서 깊이가 떨어집니다 (자세히는 [LIMITATIONS.md #3, #11](LIMITATIONS.md), 본 README 하단 "솔직한 안내" 섹션).
+> **외부 자료가 중심인 도메인**: Codex에는 `WebFetch`/`WebSearch` 빌트인이 없습니다. 하네스 구성 전 외부 MCP 서버를 등록하세요 — 예: `codex mcp add fetch -- npx -y @modelcontextprotocol/server-fetch`.
 
 코드 도메인 (Express 백엔드) 예시는 [`examples/node-cli/`](examples/node-cli/) 참조.
 
@@ -87,8 +87,6 @@ mkdir -p ~/.codex/skills && ln -sfn "$(pwd)/skills/harness" ~/.codex/skills/harn
 codex debug prompt-input "x" 2>/dev/null | grep -o 'harness:[^"]*' | head -1   # 활성화 확인
 ```
 
-> **`codex mcp list`만 실행하면 비어 보입니다.** Codex 0.125.x에서는 `codex mcp add` 후 등록되며, 플러그인 자체의 자동 활성화 CLI는 아직 없습니다 — 자세한 이유는 [Maintainers / 호환성 메모](#%EF%B8%8F-maintainers--codex-cli-version-compatibility) 참조.
-
 ---
 
 ## 🎯 첫 사용 / First use
@@ -98,19 +96,15 @@ codex
 > 하네스를 구성해줘
 ```
 
-7-Phase 워크플로우(도메인 분석 → 팀 아키텍처 → 에이전트/스킬 생성 → 통합·오케스트레이션 → 검증 → 진화)가 시작되고, **종료 시 어떤 자연어로 후속 트리거하는지 안내**가 출력됩니다.
+7-Phase 워크플로우(도메인 분석 → 팀 아키텍처 → 에이전트/스킬 생성 → 통합·오케스트레이션 → 검증 → 진화)가 시작됩니다. **슬래시 명령(`/harness`)은 0.125.x 심링크 경로에서 노출되지 않으므로 자연어 발화로만 활성화**됩니다.
 
 비대화형 / CI:
 
 ```bash
 codex exec "전자상거래 백엔드용 하네스를 구성해줘"
-# 또는 SKILL.md 본문을 stdin으로 명시 주입:
-#   codex exec - "전자상거래 백엔드용 하네스를 구성해줘" < skills/harness/SKILL.md
+# SKILL.md 본문 stdin 주입:
+codex exec - "전자상거래 백엔드용 하네스를 구성해줘" < skills/harness/SKILL.md
 ```
-
-> Codex 0.125.x의 심링크 install 경로에서는 `/<name>` 슬래시 명령은 노출되지 않습니다 (별도 메커니즘). 자연어 발화로만 활성화됩니다.
-
-활성화에 매칭되는 키워드: `하네스 구성/구축/설계/엔지니어링/점검/감사/현황`, `에이전트/스킬 동기화`, `harness`, `agent team`, `skill architect`.
 
 ---
 
@@ -135,41 +129,25 @@ codex exec "전자상거래 백엔드용 하네스를 구성해줘"
 
 | 한계 | 영향 |
 |---|---|
-| 슬래시 명령 미노출 | "하네스를 구성해줘" 자연어로만 트리거 |
-| Codex 산출물 분량 | Claude Code 대비 5~8배 짧을 수 있음 (모델 보수성 + WebSearch/WebFetch 부재) — 명시적 깊이 요구로 보완 |
+| 산출물 깊이 | Claude 대비 짧고 단순 — 아래 "솔직한 안내" 참조 |
 | MCP 메시지 전달 | polling 기반 (Claude의 push 대비 응답 지연 가능) |
-| 데이터 저장 | `~/.codex/teams.sqlite`에 메시지·작업 본문 평문 저장 — [SECURITY.md](SECURITY.md) 참조 |
+| 데이터 저장 | `~/.codex/teams.sqlite`에 메시지·작업 본문 평문 저장 — [SECURITY.md](SECURITY.md) |
 | Codex 버전 의존 | 0.125.0 검증, 0.128.0 smoke 통과. 미래 버전 회귀 가능 |
 
 10개 손실 항목 전체: [LIMITATIONS.md](LIMITATIONS.md).
 
 ### 솔직한 안내 — Codex의 작업 분화/깊이 격차 / Honest note on output depth
 
-**KR**: 같은 메타-스킬(SKILL.md)과 같은 프롬프트를 받아도 **Codex(GPT-5.x)는 Claude(Opus)보다 작업을 단순하게 처리하는 경향**이 있습니다. 실측에서 동일한 7-Phase 워크플로우를 받았을 때 Codex는 phase를 더 적게 펼치고, 각 phase의 본문을 짧게 끝냈습니다 (보고서 단어 수 14.9×, 중간 산출물 분량 29×, 변증법/대안 검토 키워드 ∞ 격차 — `~/codexwork/leehongjang` vs `~/claudework/saju` 비교, 자세히는 [LIMITATIONS.md #11](LIMITATIONS.md)).
+**KR**: Codex(GPT-5.x)는 Claude(Opus) 대비 작업을 더 단순화하는 경향이 있으나, 빠른 속도와 짧은 결과물, 적은 토큰 소모가 장점으로 다가올 때도 있습니다. 같은 메타-스킬·프롬프트로 실측한 결과 보고서 단어 수 14.9×, 중간 산출물 29×, 변증법/대안 검토 키워드 ∞ 격차가 났습니다 (`~/codexwork/leehongjang` vs `~/claudework/saju`, [LIMITATIONS.md #11](LIMITATIONS.md)).
 
-본 플러그인은 이 격차를 좁히기 위해 SKILL.md 본문 옆에 **3개의 "Codex 환경 안내" 박스**를 부착했습니다 (Phase 2/3/6) — 작업 분화/단서/도메인별 검토 가이드. 그러나 **이 정비로 격차가 완전히 메워지지는 않습니다** — 모델 자체의 보수성, `WebFetch`/`WebSearch` 빌트인 부재, multi-agent 1차 primitive 부재 같은 환경 한계는 SKILL.md 변경으로 해결 불가입니다. revfactory 원본의 추상화를 보존하기로 한 결정 때문에, 분량/구조 강제(Goodhart 함정)도 의도적으로 거부했습니다.
+본 플러그인은 SKILL.md에 3개의 "Codex 환경 안내" 박스(Phase 2/3/6)를 부착해 격차를 좁혔지만, 모델 보수성과 `WebFetch`/`WebSearch` 부재 같은 환경 한계는 SKILL.md만으로 해결되지 않습니다. 깊이가 필요한 도메인이면 다음 발화 중 도메인에 맞는 것을 함께 보내세요:
 
-가장 효과적인 보완은 **사용자의 명시 발화**입니다:
-- "**변증법 phase 추가**" / "**양측 입장 steelman 분석**" — 비판적 검토 도메인
-- "**산출물 sub-item을 도메인 맞게 구체 분해**" — phase 본문이 짧을 때
-- "**작업 원칙에 'Why' + 안 했을 때 문제 함께**" — 에이전트 정의가 빈약할 때
-- "**최종 보고서 ≥N 섹션, ≥N 인용**" — 분량/근거 요구 시 (단, 모델 부풀림 가능성 인지)
+- "**변증법 phase 추가**" / "**양측 입장 steelman 분석**"
+- "**산출물 sub-item을 도메인 맞게 구체 분해**"
+- "**작업 원칙에 'Why' + 안 했을 때 문제 함께**"
+- "**최종 보고서 ≥N 섹션, ≥N 인용**" (Goodhart 부풀림 가능성 인지)
 
-위 4가지 발화 중 도메인에 맞는 것을 하네스 구성 요청과 함께 보내면 격차가 부분적으로 좁혀집니다. **Claude 수준의 자율적 깊이는 현 환경에서 도달하기 어렵다**는 점이 본 포팅의 정직한 한계입니다.
-
----
-
-**EN**: Given the **same** meta-skill (SKILL.md) and prompt, **Codex (GPT-5.x) tends to handle the task more simply than Claude (Opus)** — it splits the work into fewer phases and writes shorter bodies under each phase. In a real comparison (`~/codexwork/leehongjang` on Codex vs `~/claudework/saju` on Claude with the same upstream meta-skill), Codex produced a final report **14.9× shorter** (in words) and **29× less** intermediate workspace content; dialectic / counter-argument keywords appeared 7 times in saju but **0 times** in leehongjang ([LIMITATIONS.md #11](LIMITATIONS.md)).
-
-To narrow this gap, the plugin attaches **three "Codex 환경 안내" callout boxes** to SKILL.md (Phases 2 / 3 / 6) — guidance on work decomposition, agent-definition cues, and domain-specific review. **These callouts do not fully close the gap.** The remaining causes (model conservatism, no built-in `WebFetch`/`WebSearch`, no first-class multi-agent primitive) are environment limits that no amount of SKILL.md editing can fix. We also intentionally rejected length/structure quotas (Goodhart's-Law trap), and we preserve revfactory's original abstractions, so the patches are deliberately conservative.
-
-The most effective complement is **explicit user phrasing** at request time:
-- "**Add a dialectic phase**" / "**steelman both sides**" — for domains where critical review matters
-- "**Decompose each artifact into concrete sub-items for this domain**" — when phase bodies look thin
-- "**Each work principle: include the why + the consequence of skipping**" — when agent definitions look thin
-- "**Final report should have ≥N sections and ≥N citations**" — when length/grounding matters (with Goodhart caveat)
-
-Combine the relevant phrasing above with your harness request, and the gap narrows. **Reaching Claude's level of autonomous depth is currently out of reach** — that's the honest limit of this port.
+**EN**: Codex (GPT-5.x) tends to simplify work more than Claude (Opus), but the trade-off — faster runs, shorter outputs, lower token cost — is sometimes the point. With the same meta-skill and prompt, we measured a 14.9× word-count gap, 29× workspace gap, and ∞ on dialectic keywords (`~/codexwork/leehongjang` vs `~/claudework/saju`, [LIMITATIONS.md #11](LIMITATIONS.md)). Three callout boxes in SKILL.md (Phases 2/3/6) narrow but don't close it — model conservatism and the lack of built-in `WebFetch`/`WebSearch` are environment limits. When depth matters, append one of: "add a dialectic phase / steelman both sides", "decompose each artifact into concrete sub-items", "each principle: why + consequence of skipping", or "final report ≥N sections, ≥N citations" (Goodhart caveat applies).
 
 ---
 
@@ -178,75 +156,22 @@ Combine the relevant phrasing above with your harness request, and the gap narro
 
 | 증상 | 원인 / 해결 |
 |---|---|
-| 자연어 발화에 스킬이 응답 안 함 | 활성화 누락. `~/.codex/skills/harness` 심링크 존재 확인 + `codex debug prompt-input "x" \| grep harness:harness` 로 검증 |
-| `codex mcp list`가 비어 있음 | Step 3 누락. `codex mcp add team ...` 실행 |
-| 자연어로도 활성화 안 됨 | Step 4 누락. `~/.codex/skills/harness` 심링크 확인 |
-| 활성화 검증 | `codex debug prompt-input "x" 2>/dev/null \| grep -o 'harness:[^"]*' \| head -1` |
-| `mcp-team-server/dist/index.js` 없음 | Step 2 빌드 누락. `cd mcp-team-server && npm install && npm run build` |
-| 비대화형으로 우회 | `codex exec "<요청>"` — skill 활성화돼 있으면 자연어 매칭. 또는 `codex exec - "<요청>" < skills/harness/SKILL.md`로 본문을 stdin 주입 |
-| 산출물 분량이 Claude Code 대비 짧음 | Codex(GPT-5.4)는 같은 가이드를 받아도 Claude(Opus)보다 보수적으로 phase를 줄이는 경향 + `WebSearch`/`WebFetch` 빌트인 부재로 외부 자료 수집이 약함. **하네스 구성 시 명시적으로 깊이 요구**: "변증법적 검토 phase 추가해줘", "방법론 비평 phase 포함해줘", "Phase별 정량 완료 조건(예: 카탈로그 ≥10개) 명시해줘", "최종 보고서 ≥10 섹션·≥400줄로", 또는 "자료 수집 에이전트의 `tools:` frontmatter에 외부 MCP(web search/fetch) 명시" |
-
-> **외부 자료 수집이 핵심인 도메인에서**: Codex에는 `WebSearch`/`WebFetch` 빌트인이 없으므로, 하네스 구성 전에 외부 MCP 서버를 먼저 등록하라 — 예: `codex mcp add fetch -- npx -y @modelcontextprotocol/server-fetch`. 그렇지 않으면 외부 자료 수집 phase가 표면적으로 끝나고 산출물 깊이가 Claude Code 원본 대비 5~8배 짧아질 수 있습니다 (`~/codexwork/leehongjang` 사례 — 동일 메타-스킬·동일 자료를 받았으나 사주 사례(`~/claudework/saju`) 대비 보고서 8배 짧음). 이 격차의 정확한 원인은 [`LIMITATIONS.md`](LIMITATIONS.md)의 "Output depth on Codex" 항목 참조.
+| 자연어 발화에 스킬이 응답 안 함 | `~/.codex/skills/harness` 심링크 확인 + `codex debug prompt-input "x" \| grep harness:harness` |
+| `codex mcp list`가 비어 있음 | `codex mcp add team ...` 미실행 (수동 설치 step 3) |
+| `mcp-team-server/dist/index.js` 없음 | `cd mcp-team-server && npm install && npm run build` |
+| 비대화형으로 우회 | `codex exec "<요청>"` 또는 `codex exec - "<요청>" < skills/harness/SKILL.md` |
 
 ---
 
 ## 업데이트 / Update
 
-### 자동화 스크립트 — 1줄로 끝
-
-```bash
-cd /path/to/codex_harness
-./bin/update.sh
-```
-
-스크립트가 다음을 자동 수행 (각 단계 진행 표시):
-
-1. `git fetch` + 신규 커밋 요약 (없으면 즉시 종료)
-2. fast-forward `git pull` (uncommitted 변경 있으면 안전하게 중단)
-3. `mcp-team-server` 의존성/빌드 갱신 (변경 감지 시에만 `npm install`)
-4. `codex mcp list` + `codex debug prompt-input`으로 활성화 검증
-5. 마켓플레이스 등록되어 있다면 `codex plugin marketplace upgrade` 실행
-
-옵션:
-- `./bin/update.sh --check` — pull 안 하고 변경 사항만 미리 확인
-- `./bin/update.sh --skip-build` — mcp-team-server 재빌드 생략 (스킬 텍스트만 바뀌었을 때)
-
-### 자동 트리거 — cron / launchd
-
-매일 한 번 또는 매 시간 자동 업데이트:
-
-```bash
-# crontab -e
-0 9 * * * cd /path/to/codex_harness && ./bin/update.sh --no-color >> ~/.codex/codex_harness-update.log 2>&1
-```
-
-macOS launchd로 변환은 [`launchd.plist` 가이드](https://www.launchd.info/) 참조.
-
-### 무엇이 자동 반영되는가
-
-설치 시 `~/.codex/skills/harness`를 **심볼릭 링크**로 만들었기 때문에 다음은 `git pull`만으로 즉시 반영됩니다 — 별도 빌드 / 재시작 불필요:
-
-| 변경 | 사용자 추가 작업 |
-|---|---|
-| `skills/harness/SKILL.md`, `references/*` | **없음** (다음 codex 세션에서 자동 반영) |
-| `AGENTS.md`, `README.md`, `LIMITATIONS.md` | 없음 |
-| `.codex-plugin/plugin.json`, `.mcp.json`, `.agents/...` | 없음 (0.125.0 forward-compat schema) |
-| `mcp-team-server/src/*.ts` | **`bin/update.sh` 또는 `npm run build` 1회** |
-| MCP 도구 인터페이스 추가/제거 | 위 + 진행 중인 codex 세션 재시작 |
-
-### EN — Update
-
-A single command keeps the install in sync:
-
 ```bash
 cd /path/to/codex_harness && ./bin/update.sh
 ```
 
-The script handles git fetch → fast-forward pull → conditional npm install → tsc build → activation verification → marketplace upgrade. Use `--check` for dry-run, `--skip-build` when only docs/skill text changed.
+`git fetch` → fast-forward `git pull` → 조건부 `npm install` + `tsc` → 활성화 검증 → (있으면) marketplace upgrade. 옵션: `--check`(dry-run), `--skip-build`(스킬 텍스트만 바뀌었을 때).
 
-For unattended updates, add a cron entry: `0 9 * * * cd /path/to/codex_harness && ./bin/update.sh --no-color >> ~/.codex/codex_harness-update.log 2>&1`.
-
-Because the skill is installed as a symlink to `~/.codex/skills/harness`, edits to `skills/harness/**` flow through immediately on the next codex session — no build, no re-register. Only `mcp-team-server/src/*.ts` changes require a rebuild, which the script does automatically.
+심링크 설치 덕분에 `skills/harness/**`, `AGENTS.md`, README/LIMITATIONS 변경은 **다음 codex 세션에서 자동 반영**됩니다. 재빌드가 필요한 유일한 경우는 `mcp-team-server/src/*.ts` 수정이며, 위 스크립트가 자동 처리합니다.
 
 ---
 
