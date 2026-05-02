@@ -98,6 +98,22 @@ metadata:
 
 **자체 페르소나 5개**: 본 플러그인의 `agents/` 디렉토리에는 메타-하네스를 빌드한 페르소나 5종(claude-harness-cartographer, codex-internals-analyst, codex-plugin-builder, codex-harness-qa, primitive-translator)이 동봉된다. 사용자가 자기 도메인용 새 에이전트를 만들 때는 이 5개를 덮어쓰지 말고 자신의 cwd에 새로 작성한다.
 
+**외부 자료 수집(웹 검색/페치) 도구 — Codex 환경 한계:**
+revfactory 원본 환경(Claude Code)에는 `WebSearch`/`WebFetch` 빌트인이 있지만, **Codex CLI에는 없다**. 도메인이 외부 자료 수집을 요구하면(예: 학술 문헌 조사, 사이트 탐색, 사실 검증):
+
+1. **에이전트 정의의 `tools:` frontmatter에 사용 도구를 명시한다** (사람용 안내 + 호출 시점 점검표):
+   ```yaml
+   ---
+   name: literature-researcher
+   description: ...
+   tools: web_search, web_fetch, Read, Write
+   ---
+   ```
+2. **외부 MCP 서버 등록을 사용자에게 안내한다** — 트리거링 안내 섹션에 예: `codex mcp add web-search -- npx -y @modelcontextprotocol/server-fetch`. 사용자가 별도 설치하지 않으면 해당 에이전트의 외부 자료 깊이가 제한된다.
+3. **자료 수집 결과 깊이 기준을 SKILL.md 본문에 명시한다** — "수집 항목 N개 이상", "각 항목에 출처 메타데이터 포함" 등. 외부 도구가 약하면 산출물이 짧아지므로 도메인이 깊이를 요구할 때 사용자가 명시적 정량 기준을 요구하면 보완된다.
+
+이 한계를 무시하면 외부 자료 수집 도메인의 산출물이 Claude Code 원본 대비 약 5~8배 짧아지는 패턴이 관측되었다(`leehongjang` 사례 참조).
+
 ### Phase 4: 스킬 생성
 
 각 에이전트가 사용할 스킬을 `프로젝트/skills/{name}/SKILL.md`에 생성한다. Codex는 plugin manifest의 `"skills": "./skills/"` 디렉토리를 자동 주입하며, 별도 invocation 도구 없이 모델이 SKILL.md를 직접 read 한다(progressive disclosure). 상세 작성 가이드는 `references/skill-writing-guide.md` 참조.

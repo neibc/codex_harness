@@ -233,6 +233,9 @@ codex_harness/
 | 활성화 검증 | `codex debug prompt-input "x" 2>/dev/null \| grep -o 'harness:[^"]*' \| head -1` |
 | `mcp-team-server/dist/index.js` 없음 | Step 2 빌드 누락. `cd mcp-team-server && npm install && npm run build` |
 | 비대화형으로 우회 | `codex exec --prompt-file skills/harness/SKILL.md "<요청>"` — 슬래시/스킬 활성화 무관하게 작동 |
+| 산출물 분량이 Claude Code 대비 짧음 | Codex(GPT-5.4)는 같은 가이드를 받아도 Claude(Opus)보다 보수적으로 phase를 줄이는 경향 + `WebSearch`/`WebFetch` 빌트인 부재로 외부 자료 수집이 약함. **하네스 구성 시 명시적으로 깊이 요구**: "변증법적 검토 phase 추가해줘", "방법론 비평 phase 포함해줘", "Phase별 정량 완료 조건(예: 카탈로그 ≥10개) 명시해줘", "최종 보고서 ≥10 섹션·≥400줄로", 또는 "자료 수집 에이전트의 `tools:` frontmatter에 외부 MCP(web search/fetch) 명시" |
+
+> **외부 자료 수집이 핵심인 도메인에서**: Codex에는 `WebSearch`/`WebFetch` 빌트인이 없으므로, 하네스 구성 전에 외부 MCP 서버를 먼저 등록하라 — 예: `codex mcp add fetch -- npx -y @modelcontextprotocol/server-fetch`. 그렇지 않으면 외부 자료 수집 phase가 표면적으로 끝나고 산출물 깊이가 Claude Code 원본 대비 5~8배 짧아질 수 있습니다 (`~/codexwork/leehongjang` 사례 — 동일 메타-스킬·동일 자료를 받았으나 사주 사례(`~/claudework/saju`) 대비 보고서 8배 짧음). 이 격차의 정확한 원인은 [`LIMITATIONS.md`](LIMITATIONS.md)의 "Output depth on Codex" 항목 참조.
 
 ---
 
