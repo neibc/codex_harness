@@ -30,7 +30,7 @@ Agent({
   prompt: """
   너의 역할은 .claude/agents/claude-harness-cartographer.md에 정의되어 있다. 먼저 읽고 작업하라.
 
-  작업: /Users/neibc/.claude/plugins/cache/harness-marketplace/harness/1.2.0/ 전수 조사.
+  작업: 호출자가 지정한 plugin 경로(기본 후보: ~/.claude/plugins/cache/harness-marketplace/harness/<version>/) 전수 조사.
   - 출력: _workspace/02_claude_primitives.md
   - 사용 도구: Read, Glob, Grep, Bash, Write
 

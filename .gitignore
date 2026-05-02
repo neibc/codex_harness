@@ -1,35 +1,67 @@
-# Codex harness — gitignore
+# codex_harness — gitignore
 
-# 중간 산출물 (오케스트레이터의 작업 영역)
+# ───── 중간 산출물 (오케스트레이터 작업 영역) ─────
 _workspace/
 _workspace_prev_*/
 
-# MCP 팀 서버 빌드 산출물
+# ───── 빌드 산출물 ─────
 mcp-team-server/node_modules/
 mcp-team-server/dist/
 mcp-team-server/*.log
+mcp-team-server/.tsbuildinfo
+mcp-team-server/coverage/
 
-# Codex 로컬 상태 (사용자별)
+# ───── Codex 로컬 상태 (사용자별, 절대 커밋 금지) ─────
 .codex/
 *.sqlite
 *.sqlite-journal
 *.sqlite-wal
 *.sqlite-shm
 
-# OS / 에디터
+# ───── OS / 에디터 ─────
 .DS_Store
+.AppleDouble
+.LSOverride
 Thumbs.db
+ehthumbs.db
+Desktop.ini
 .vscode/
 .idea/
 *.swp
 *.swo
+*.bak
 *~
+.#*
+\#*#
 
-# Node
+# ───── Node ─────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+.yarn/
+.npm/
 package-lock.json.backup
 yarn.lock.backup
-.pnpm-store/
 
-# 테스트 임시
+# ───── 테스트 임시 ─────
 tests/_tmp/
 tests/_results/
+*.tap
+
+# ───── 환경 / 비밀 (사고 방지) ─────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+secrets/
+.secrets
+
+# ───── 기타 임시 / 로그 ─────
+*.log
+*.tmp
+.cache/
