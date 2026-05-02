@@ -209,7 +209,7 @@ Codex에는 Claude의 빌트인 `subagent_type`(general-purpose / Explore / Plan
 
 **원칙:** 모든 에이전트는 반드시 `agents/{name}.md` 파일로 정의한다. 빌트인 카테고리가 없는 Codex에서는 sandbox 모드가 유일한 행동 강제 메커니즘이며, 그 밖의 행동 원칙은 모두 prompt 본문에 명시되어야 한다.
 
-**모델:** 권장 모델 등급은 "최고 추론 등급"(예: `gpt-5.4`). `codex exec -m <model>` 또는 `--profile <p>`로 명시.
+**모델:** 기본은 단일 최상위 등급(현 시점 `gpt-5.5`)으로 단순하게. **선택사항**으로 역할별 매트릭스(`SKILL.md` Phase 3 "역할별 모델 매트릭스" 참조) — 오케스트레이터·분석가는 `gpt-5.5`, 빌더는 `gpt-5.3-codex`(코딩 특화) 또는 `gpt-5.4-mini`(경량). 호출 시 `codex exec -m <model>` 또는 `--profile <p>`로 명시.
 
 ## 에이전트 정의 구조
 

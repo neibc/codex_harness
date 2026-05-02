@@ -82,7 +82,38 @@ metadata:
 
 **모든 에이전트는 반드시 `프로젝트/agents/{name}.md` 파일로 정의한다.** Codex `codex exec` 호출 시 prompt에 역할을 직접 넣는 것은 금지한다.
 
-**모델 설정:** `codex exec -m <model>` 또는 `--profile <p>`로 명시. 본 하네스의 권장 등급은 "최고 추론 등급"(Codex의 `gpt-5.4` 등). 에이전트 정의 frontmatter의 `model:` 필드는 사람용 안내(Codex가 자동 인식하지는 않음).
+**모델 설정:** `codex exec -m <model>` 또는 `--profile <p>`로 명시한다. 에이전트 정의 frontmatter의 `model:` 필드는 사람용 안내일 뿐 Codex가 자동 인식하지 않으므로, **호출 시점에 `-m`을 직접 명시**해야 정책이 발효된다.
+
+기본 정책은 **revfactory 원본 그대로 — 모든 에이전트에 최고 추론 등급 단일 사용** (현 시점 Codex 라인업의 `gpt-5.5`). 추가 옵션을 강요하지 않으므로 단일 정책이 가장 단순한 선택이다.
+
+**선택사항: 역할별 모델 매트릭스 (Codex 라인업 활용)** — Codex의 GPT-5 라인업은 Claude의 opus/sonnet 두 등급보다 세분화되어 있어 비용/품질 trade-off를 더 정교하게 잡을 수 있다. 비용이 부담되거나 작업 종류 차이가 클 때 다음 매트릭스를 참고:
+
+| 에이전트 역할 | 권장 모델 | 이유 |
+|---|---|---|
+| 오케스트레이터, 메타-스킬, 도메인 분석 | **`gpt-5.5`** (최신 최상위) | 7-Phase 추론, 팀 아키텍처 결정에 깊은 사고 필요 |
+| 분석가, 카탈로거, 비평/검증, QA | `gpt-5.5` (또는 `gpt-5.4`) | 정확성 + 균형 잡힌 판단 |
+| 빌더, 코더, 정형 변환 | **`gpt-5.3-codex`** (코딩 특화) 또는 `gpt-5.4-mini` | 코드 정확도 충분 + 비용 절감 |
+| 자료 수집, 단순 도구 호출, 정형 보조 | `gpt-5.4-mini` | 도구 호출 위주, 추론 부담 작음 |
+
+호출 예 (오케스트레이터 본인이 매트릭스를 적용):
+```bash
+# 오케스트레이터: 깊은 추론
+codex exec -m gpt-5.5 -C . "<요청>"
+
+# 빌더 서브 에이전트: 코딩 특화로 비용 절감
+codex exec --json --ephemeral -m gpt-5.3-codex -C _workspace/build/ \
+  - "<task>" < agents/builder.md
+```
+
+또는 `~/.codex/config.toml`에 profile을 정의해 `--profile builder` 같이 호출:
+```toml
+[profiles.builder]
+model = "gpt-5.3-codex"
+[profiles.analyst]
+model = "gpt-5.5"
+```
+
+> 위 매트릭스는 **revfactory 원본의 단일 정책을 변경하는 것이 아니라** Codex 환경 특수성에 맞춘 옵션 가이드다. 단일 모델로 가도 정상 작동하며, 매트릭스를 따른다고 강제 검증되지 않는다. 비용·품질·일관성 우선순위에 맞게 선택하라.
 
 **팀 재구성:** 에이전트 팀은 같은 sqlite 저장소를 공유하므로, Phase 간에 `team_destroy` 후 새 `team_create`로 팀을 교체할 수 있다. 이전 팀의 산출물은 파일(`_workspace/`)로 보존한다.
 
