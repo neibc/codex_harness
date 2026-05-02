@@ -57,9 +57,19 @@ node --version        # v18 이상 권장
 
 ### 단계별 설치 / Step-by-step
 
-> **중요 / Important**: Codex 0.125.0 실측 결과, **`codex plugin marketplace add`는 마켓만 등록**할 뿐 플러그인을 자동 활성화하지 않습니다 (CLI에 `codex plugin install` 명령이 없음 — 활성화는 `codex` 인터랙티브 TUI 안에서만 가능). 또한 플러그인-스코프 MCP 서버는 `codex mcp list`에 보이지 않습니다. 따라서 가장 안정적인 설치 경로는 **`codex mcp add`로 팀 서버를 직접 등록**하는 방식입니다. 마켓플레이스 등록은 `/harness` 슬래시 트리거를 위해 추가로 수행합니다.
+> **중요 / Important**: Codex 0.125.0의 실측 결과는 다음과 같습니다.
+> - `codex plugin marketplace add`는 마켓 메타데이터만 등록할 뿐 스킬을 활성화하지 않습니다 (CLI에 `codex plugin install` 명령 없음, 플러그인-스코프 MCP는 `codex mcp list`에 보이지 않음).
+> - **스킬은 `~/.codex/skills/<name>/SKILL.md`에 파일이 있어야 활성화**됩니다 (이 위치를 Codex가 자동 스캔하여 `<skills>` 블록에 등록).
+> - **MCP 서버는 `codex mcp add`로 등록**해야 모든 세션에서 사용 가능합니다.
 >
-> Empirical result on Codex 0.125.0: **`codex plugin marketplace add` only registers the marketplace** — there is no `codex plugin install` CLI command, and plugin activation must happen inside the interactive `codex` TUI. Plugin-scoped MCP servers are also not visible to `codex mcp list`. The most reliable path is therefore to register the team server directly with `codex mcp add`. The marketplace registration is an additional step for the `/harness` slash trigger.
+> 따라서 안정적인 설치는 (a) MCP 서버 등록 + (b) 스킬을 `~/.codex/skills/`에 심볼릭 링크하는 두 단계입니다. 본 머신에서 검증 완료.
+>
+> Empirical findings on Codex 0.125.0:
+> - `codex plugin marketplace add` only registers marketplace metadata; it does not activate skills (there is no `codex plugin install` CLI, and plugin-scoped MCP servers do not appear in `codex mcp list`).
+> - **A skill is activated when its `SKILL.md` lives at `~/.codex/skills/<name>/SKILL.md`** — Codex auto-scans this directory and registers the skill in its `<skills>` block.
+> - **MCP servers must be registered with `codex mcp add`** to be available in every session.
+>
+> So the reliable install is two steps: (a) register the MCP server, and (b) symlink the skill into `~/.codex/skills/`. Verified live on the dev machine.
 
 **KR**
 
@@ -82,14 +92,21 @@ codex mcp add team \
   -- node "$(pwd)/mcp-team-server/dist/index.js"
 codex mcp list        # Status: enabled 으로 team 표시되어야 함
 
-# 4) [옵션] 마켓플레이스에도 등록 — /harness 슬래시 + 스킬 자동 주입을 원하면
-codex plugin marketplace add "$(pwd)"
-# → ~/.codex/config.toml 에 [marketplaces.codex-harness-marketplace] 추가
-# → 이 단계에서는 마켓만 등록됩니다. 플러그인 활성화(/harness 작동)는
-#   `codex` 인터랙티브 모드 안의 플러그인 메뉴에서 직접 enable 해야 합니다.
+# 4) [필수] harness 스킬을 ~/.codex/skills/ 에 활성화 (심볼릭 링크 권장)
+#    심링크는 이 저장소의 스킬 변경이 즉시 반영되어 개발/사용에 모두 편함.
+mkdir -p ~/.codex/skills
+ln -sfn "$(pwd)/skills/harness" ~/.codex/skills/harness
+ls ~/.codex/skills/    # harness 항목이 표시되어야 함
 
-# 5) 설치 검증
-./tests/smoke.sh      # PASS=37 FAIL=0 OK
+# 5) [옵션] 마켓플레이스 메타데이터 등록 (현재 0.125.0에서는 비활성)
+#    향후 codex plugin install CLI가 추가되면 활용 가능. 현 단계에서는
+#    스킬 활성화에는 영향 없음.
+codex plugin marketplace add "$(pwd)"
+
+# 6) 설치 검증
+./tests/smoke.sh                                    # PASS=37 FAIL=0 OK
+codex debug prompt-input "test" 2>/dev/null \
+  | grep -o 'harness:[^"]*' | head -1               # harness:harness ... 출력되면 활성화 성공
 ```
 
 **EN**
@@ -113,64 +130,67 @@ codex mcp add team \
   -- node "$(pwd)/mcp-team-server/dist/index.js"
 codex mcp list        # the "team" entry should show Status: enabled
 
-# 4) [Optional] Also register the marketplace — needed for the /harness
-#    slash command and auto-injection of the harness skill.
-codex plugin marketplace add "$(pwd)"
-# → adds [marketplaces.codex-harness-marketplace] to ~/.codex/config.toml.
-# → This only registers the marketplace. Activating the plugin (so that
-#   /harness works) currently requires using the plugin menu inside the
-#   interactive `codex` TUI; there is no CLI `plugin install` command in 0.125.0.
+# 4) [Required] Activate the harness skill into ~/.codex/skills/ (symlink recommended)
+#    A symlink lets edits to the repo flow through immediately, which is handy
+#    for both running and developing the harness.
+mkdir -p ~/.codex/skills
+ln -sfn "$(pwd)/skills/harness" ~/.codex/skills/harness
+ls ~/.codex/skills/    # the "harness" entry should appear
 
-# 5) Verify
-./tests/smoke.sh      # PASS=37 FAIL=0 OK
+# 5) [Optional] Register the marketplace metadata (currently inactive in 0.125.0)
+#    Useful once a `codex plugin install` CLI exists. Has no effect on
+#    skill activation today.
+codex plugin marketplace add "$(pwd)"
+
+# 6) Verify
+./tests/smoke.sh                                    # PASS=37 FAIL=0 OK
+codex debug prompt-input "test" 2>/dev/null \
+  | grep -o 'harness:[^"]*' | head -1               # prints harness:harness ... when active
 ```
 
 ### 트러블슈팅 / Troubleshooting
 
 **KR**
 
+- **`codex` 진입 후 `/harness`(또는 `harness:harness`)가 안 보임**
+  - 가장 흔한 원인: `~/.codex/skills/harness` 심링크 누락 (위 단계 4). Codex는 이 디렉토리를 스캔해서만 스킬을 등록합니다.
+  - 해결: `mkdir -p ~/.codex/skills && ln -sfn "$(pwd)/skills/harness" ~/.codex/skills/harness`
+  - 검증: `codex debug prompt-input "x" 2>/dev/null | grep -o 'harness:[^"]*' | head -1` — `harness:harness` 가 출력되면 활성화됨.
+  - 비대화형으로도 사용 가능 (스킬 활성화 없이): `codex exec --prompt-file skills/harness/SKILL.md "<요청>"`.
+
 - **`codex mcp list`가 비어 있음** (`No MCP servers configured yet.`)
-  - 원인: 위의 [필수] 단계 3을 건너뛰고 마켓플레이스 add만 실행함. Codex 0.125.0에서 마켓플레이스 add는 마켓 등록만 하고 플러그인을 자동 활성화하지 않으며, 플러그인-스코프 MCP 서버는 `codex mcp list`에 보이지 않습니다.
-  - 해결: 위 단계 3의 `codex mcp add team ...` 명령을 실행하세요. 등록 후 `codex mcp list`에 `Status: enabled`로 즉시 표시됩니다.
+  - 위 단계 3의 `codex mcp add team ...` 누락. 등록 후 즉시 `Status: enabled`로 표시됩니다.
+  - 플러그인 시스템(`codex plugin marketplace add`)으로 등록한 MCP 서버는 `codex mcp list`에 보이지 않습니다 — 0.125.0의 알려진 동작.
 
 - **`mcp-team-server/dist/index.js` 없음** (smoke의 [5]에서 WARN)
   - 빌드 단계 누락. `cd mcp-team-server && npm install && npm run build` 재실행.
 
-- **MCP 등록은 됐는데 `codex` 진입 시 `/harness` 슬래시 미인식**
-  - 마켓플레이스 add는 했지만 플러그인이 활성화 안 됨. `~/.codex/config.toml`에 `[plugins."codex-harness@codex-harness-marketplace"] enabled = true`가 있는지 확인. 없으면 `codex` 인터랙티브에서 플러그인 메뉴를 통해 활성화하거나, 다음 한 줄을 직접 추가:
-    ```bash
-    printf '\n[plugins."codex-harness@codex-harness-marketplace"]\nenabled = true\n' >> ~/.codex/config.toml
-    ```
-  - 슬래시 커맨드 없이 비대화형으로도 사용 가능: `codex exec --prompt-file skills/harness/SKILL.md "<요청>"`.
-
 - **`codex plugin marketplace add` 실패**
   - 경로에 공백이 있거나 `marketplace.json` 파싱 에러. `jq < .agents/plugins/marketplace.json` 으로 유효성 확인.
 
+- **심링크 대신 복사를 쓰고 싶다**
+  - `cp -R "$(pwd)/skills/harness" ~/.codex/skills/harness` — 다만 저장소 변경이 자동 반영되지 않으니 git pull 후 재복사 필요.
+
 **EN**
 
+- **`/harness` (or `harness:harness`) does not appear in `codex`**
+  - Most common cause: missing `~/.codex/skills/harness` symlink (step 4 above). Codex scans only this directory to register skills.
+  - Fix: `mkdir -p ~/.codex/skills && ln -sfn "$(pwd)/skills/harness" ~/.codex/skills/harness`
+  - Verify: `codex debug prompt-input "x" 2>/dev/null | grep -o 'harness:[^"]*' | head -1` — when active, this prints `harness:harness` ...
+  - Non-interactive use does not require activation: `codex exec --prompt-file skills/harness/SKILL.md "<request>"`.
+
 - **`codex mcp list` is empty** (`No MCP servers configured yet.`)
-  - Cause: you skipped [Required] step 3 above and only ran the marketplace add. In Codex 0.125.0, marketplace add only registers the marketplace — it does not auto-activate the plugin, and plugin-scoped MCP servers are not visible to `codex mcp list`.
-  - Fix: run the `codex mcp add team ...` command from step 3. It shows up as `Status: enabled` in `codex mcp list` immediately.
+  - You skipped step 3 (`codex mcp add team ...`). Once you run it, the team server shows up as `Status: enabled` immediately.
+  - MCP servers registered via the plugin system (`codex plugin marketplace add`) do not appear in `codex mcp list` in 0.125.0 — known behavior.
 
 - **`mcp-team-server/dist/index.js` missing** (smoke step [5] warns)
   - You skipped the build step. Run `cd mcp-team-server && npm install && npm run build`.
-
-- **MCP server is registered but `/harness` is unknown inside `codex`**
-  - The marketplace was added but the plugin was not activated. Check that `~/.codex/config.toml` has `[plugins."codex-harness@codex-harness-marketplace"] enabled = true`. If not, enable it through the plugin menu in interactive `codex`, or append the line directly:
-    ```bash
-    printf '\n[plugins."codex-harness@codex-harness-marketplace"]\nenabled = true\n' >> ~/.codex/config.toml
-    ```
-  - You can always use the harness non-interactively without the slash command: `codex exec --prompt-file skills/harness/SKILL.md "<request>"`.
 
 - **`codex plugin marketplace add` fails**
   - The path contains spaces, or `marketplace.json` failed to parse. Validate with `jq < .agents/plugins/marketplace.json`.
 
-- **`mcp-team-server/dist/index.js` missing** (smoke step [5] warns)
-  - You skipped the build step. Run `cd mcp-team-server && npm install && npm run build`.
-
-- **The `/harness` slash command is unknown inside `codex`**
-  - Verify `~/.codex/config.toml` contains `[plugins."codex-harness@codex-harness-marketplace"] enabled = true`. If not, re-add the marketplace.
-  - Confirm `skills/harness/SKILL.md` matches the `skills` key in `.codex-plugin/plugin.json`.
+- **You prefer copying the skill instead of symlinking**
+  - `cp -R "$(pwd)/skills/harness" ~/.codex/skills/harness` — but you will need to re-copy after each `git pull`.
 
 ---
 
@@ -524,30 +544,34 @@ Issues, PRs, and reports of mapping gaps are welcome. Please read [`CONTRIBUTING
 
 **KR**
 
-설치는 두 단계(MCP 등록 + 옵션 마켓 등록)였으니 제거도 동일한 두 곳을 정리합니다. 본 머신에서 실측 확인된 절차:
+설치는 (a) MCP 등록, (b) 스킬 심링크, (c) 옵션 마켓 등록의 세 곳을 건드렸으니, 제거도 같은 세 곳을 정리합니다. 본 머신에서 실측 확인된 절차:
 
 ```bash
 # 1) MCP 팀 서버 등록 해제
 codex mcp remove team
 codex mcp list                # team이 사라졌는지 확인
 
-# 2) [옵션] 마켓플레이스 등록 해제 (마켓을 등록했다면)
+# 2) 스킬 활성화 해제 (심링크 또는 복사본 제거)
+rm -f ~/.codex/skills/harness                # 심링크라면
+# rm -rf ~/.codex/skills/harness             # 복사본이라면 (-rf)
+
+# 3) [옵션] 마켓플레이스 등록 해제 (마켓을 등록했다면)
 codex plugin marketplace remove codex-harness-marketplace
 
-# 3) [옵션] 마켓 add 단계에서 codex 인터랙티브 메뉴로 플러그인을 활성화했다면,
+# 4) [옵션] 마켓 add 단계에서 codex 인터랙티브 메뉴로 플러그인을 활성화했다면,
 #    config.toml에 남은 plugin 엔트리도 제거. 자동으로 같이 지워지지 않을 수 있습니다.
 #    아래 한 줄을 ~/.codex/config.toml에서 직접 삭제하세요:
 #    [plugins."codex-harness@codex-harness-marketplace"]
 #    enabled = true
 
-# 4) 영속 데이터 정리 (팀 협업 sqlite — 다른 프로젝트와 공유 안 했다면 삭제 안전)
+# 5) 영속 데이터 정리 (팀 협업 sqlite — 다른 프로젝트와 공유 안 했다면 삭제 안전)
 rm -f ~/.codex/teams.sqlite
 
-# 5) 빌드 산출물 정리 (저장소 자체를 보존하면서 fresh 상태로 되돌리려면)
+# 6) 빌드 산출물 정리 (저장소 자체를 보존하면서 fresh 상태로 되돌리려면)
 cd /path/to/codex_harness
 rm -rf mcp-team-server/node_modules mcp-team-server/dist
 
-# 6) 저장소 자체를 지우려면
+# 7) 저장소 자체를 지우려면
 cd ~ && rm -rf /path/to/codex_harness
 ```
 
@@ -555,6 +579,7 @@ cd ~ && rm -rf /path/to/codex_harness
 
 ```bash
 codex mcp list                                                          # No MCP servers configured yet.
+ls ~/.codex/skills/harness 2>&1                                         # No such file or directory
 grep -E 'codex-harness|teams\.sqlite' ~/.codex/config.toml              # 출력 없으면 정리 완료
 ls ~/.codex/teams.sqlite                                                 # No such file
 ```
@@ -563,32 +588,36 @@ ls ~/.codex/teams.sqlite                                                 # No su
 
 **EN**
 
-Install was two steps (MCP registration + optional marketplace registration), so uninstall cleans the same two places. Sequence verified on this machine:
+Install touched three places (MCP, skill symlink, optional marketplace), so uninstall cleans the same three. Sequence verified on this machine:
 
 ```bash
 # 1) Unregister the MCP team server
 codex mcp remove team
 codex mcp list                # confirm "team" is gone
 
-# 2) [Optional] Unregister the marketplace (if you added it)
+# 2) Deactivate the skill (remove the symlink or the copy)
+rm -f ~/.codex/skills/harness                 # if symlinked
+# rm -rf ~/.codex/skills/harness              # if copied (-rf)
+
+# 3) [Optional] Unregister the marketplace (if you added it)
 codex plugin marketplace remove codex-harness-marketplace
 
-# 3) [Optional] If you enabled the plugin from the codex interactive
+# 4) [Optional] If you enabled the plugin from the codex interactive
 #    menu after `marketplace add`, also remove the lingering plugin
 #    entry from ~/.codex/config.toml — it may not be cleaned up
 #    automatically. Delete this block by hand:
 #    [plugins."codex-harness@codex-harness-marketplace"]
 #    enabled = true
 
-# 4) Delete persistent data (the team-collaboration sqlite — safe to drop
+# 5) Delete persistent data (the team-collaboration sqlite — safe to drop
 #    if you did not share it across other projects)
 rm -f ~/.codex/teams.sqlite
 
-# 5) Reset build artifacts while keeping the repo (for a fresh re-install test)
+# 6) Reset build artifacts while keeping the repo (for a fresh re-install test)
 cd /path/to/codex_harness
 rm -rf mcp-team-server/node_modules mcp-team-server/dist
 
-# 6) Or delete the repo entirely
+# 7) Or delete the repo entirely
 cd ~ && rm -rf /path/to/codex_harness
 ```
 
@@ -596,6 +625,7 @@ Verification:
 
 ```bash
 codex mcp list                                                          # → "No MCP servers configured yet."
+ls ~/.codex/skills/harness 2>&1                                         # → No such file or directory
 grep -E 'codex-harness|teams\.sqlite' ~/.codex/config.toml              # → no output means clean
 ls ~/.codex/teams.sqlite                                                 # → No such file
 ```
