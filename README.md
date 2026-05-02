@@ -93,17 +93,17 @@ codex debug prompt-input "x" 2>/dev/null | grep -o 'harness:[^"]*' | head -1   #
 
 ```bash
 codex
-> 하네스를 구성해줘
+> ANSI SQL을 지원하는 python DB서버와 클라이언트를 개발하는 하네스를 구성해줘
 ```
 
-7-Phase 워크플로우(도메인 분석 → 팀 아키텍처 → 에이전트/스킬 생성 → 통합·오케스트레이션 → 검증 → 진화)가 시작됩니다. **슬래시 명령(`/harness`)은 0.125.x 심링크 경로에서 노출되지 않으므로 자연어 발화로만 활성화**됩니다.
+도메인을 함께 적어주면 7-Phase 워크플로우(도메인 분석 → 팀 아키텍처 → 에이전트/스킬 생성 → 통합·오케스트레이션 → 검증 → 진화)가 그 도메인에 맞춰 시작됩니다. **슬래시 명령(`/harness`)은 0.125.x 심링크 경로에서 노출되지 않으므로 자연어 발화로만 활성화**됩니다.
 
 비대화형 / CI:
 
 ```bash
-codex exec "전자상거래 백엔드용 하네스를 구성해줘"
+codex exec "ANSI SQL을 지원하는 python DB서버와 클라이언트를 개발하는 하네스를 구성해줘"
 # SKILL.md 본문 stdin 주입:
-codex exec - "전자상거래 백엔드용 하네스를 구성해줘" < skills/harness/SKILL.md
+codex exec - "ANSI SQL을 지원하는 python DB서버와 클라이언트를 개발하는 하네스를 구성해줘" < skills/harness/SKILL.md
 ```
 
 ---
@@ -164,6 +164,8 @@ codex exec - "전자상거래 백엔드용 하네스를 구성해줘" < skills/h
 ---
 
 ## 업데이트 / Update
+
+> 이 섹션과 [제거](#-제거--uninstall) 섹션의 `/path/to/codex_harness`는 **본 저장소를 `git clone`한 경로**를 의미합니다 (예: `~/dev/codex_harness`). 본인 환경의 실제 경로로 바꿔서 실행하세요.
 
 ```bash
 cd /path/to/codex_harness && ./bin/update.sh
