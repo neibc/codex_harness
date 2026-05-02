@@ -296,7 +296,7 @@ shell 백그라운드로 N개 `codex exec` 병렬 호출.
 
 1. **실행 모드를 먼저 명시** — 오케스트레이터 상단에 "에이전트 팀" / "서브 에이전트" / "하이브리드" 중 하나 명시. 하이브리드면 Phase별 모드 표 필수
 2. **팀 모드는 MCP 도구 호출(team_create/send_message/task_create)을 구체적으로** — 팀 구성, 작업 등록, 통신 규칙
-3. **서브 모드는 codex exec 옵션을 완전히 명시** — `--json`, `--ephemeral`, `-C`, `-s`, `--prompt-file`, `-o`
+3. **서브 모드는 codex exec 옵션을 완전히 명시** — `--json`, `--ephemeral`, `-C`, `-s`, `-o`. 페르소나는 stdin 주입(`- "<task>" < agents/<name>.md`)
 4. **파일 경로는 절대적으로** — 상대 경로 금지, `_workspace/` 기준 명확한 경로
 5. **Phase 간 의존성 명시** — 어떤 Phase가 어떤 Phase의 결과에 의존하는지. 하이브리드는 모드 전환 지점을 특히 강조
 6. **에러 핸들링은 현실적으로** — "모든 것이 성공한다"고 가정하지 않음
@@ -311,7 +311,7 @@ shell 백그라운드로 N개 `codex exec` 병렬 호출.
 - "이전 결과 기반으로", "결과 개선"
 - 도메인 관련 일상적 요청
 
-후속 키워드가 없으면 첫 실행 후 하네스가 사실상 죽은 코드가 된다. (Codex의 description 매칭 강도는 Claude 대비 Unknown — `codex exec --prompt-file` 명시 호출 경로도 README에 동시에 안내하라.)
+후속 키워드가 없으면 첫 실행 후 하네스가 사실상 죽은 코드가 된다. (Codex의 description 매칭 강도는 Claude 대비 Unknown — `codex exec - < <skill-or-agent>.md` 명시 호출 경로도 README에 동시에 안내하라.)
 
 ## 실제 오케스트레이터 참고
 

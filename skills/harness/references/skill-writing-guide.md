@@ -27,7 +27,7 @@ Description은 스킬의 유일한 트리거 메커니즘이다. Codex는 `<skil
 
 모델은 자신의 기본 도구로 쉽게 처리할 수 있는 단순 작업에는 스킬을 호출하지 않는 경향이 있다. "이 PDF 읽어줘" 같은 단순 요청은 description이 완벽해도 트리거되지 않을 수 있다. 복잡하고 다단계이며 전문적인 작업일수록 스킬 트리거 확률이 높다.
 
-> Codex의 자동 매칭 강도는 Claude 대비 Unknown(LIMITATIONS.md §9). 명시 호출 경로(`codex exec --prompt-file skills/<name>/SKILL.md`)도 README에 동시 안내하여 보강하라.
+> Codex의 자동 매칭 강도는 Claude 대비 Unknown(LIMITATIONS.md §9). 명시 호출 경로(`codex exec - < skills/<name>/SKILL.md`)도 README에 동시 안내하여 보강하라.
 
 ### 작성 원칙
 

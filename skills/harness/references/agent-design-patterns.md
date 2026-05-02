@@ -130,7 +130,7 @@ codex exec \
 
 **적합한 경우:** 입력 유형에 따라 다른 처리가 필요
 **예시:** 코드 리뷰 — 보안/성능/아키텍처 전문가 중 해당 영역만 호출
-**팀 모드 적합성:** 서브 에이전트가 더 적합. `codex exec --prompt-file agents/<expert>.md` 한 번 호출.
+**팀 모드 적합성:** 서브 에이전트가 더 적합. `codex exec - < agents/<expert>.md` 한 번 호출.
 
 ### 4. 생성-검증 (Producer-Reviewer)
 
@@ -195,7 +195,7 @@ Codex에는 Claude의 빌트인 `subagent_type`(general-purpose / Explore / Plan
 
 ### 커스텀 타입
 
-`agents/{name}.md`에 에이전트를 정의하면 `codex exec --prompt-file agents/{name}.md`로 호출 가능. 커스텀 에이전트는 sandbox 옵션을 호출 시점에 지정해야 한다.
+`agents/{name}.md`에 에이전트를 정의하면 `codex exec - < agents/{name}.md`로 호출 가능. 커스텀 에이전트는 sandbox 옵션을 호출 시점에 지정해야 한다.
 
 ### 선택 기준
 
@@ -263,8 +263,8 @@ description: "1-2문장 역할 설명. 트리거 키워드 나열."
 | 구분 | 스킬 (Skill) | 에이전트 (Agent) |
 |------|-------------|-----------------|
 | 정의 | 절차적 지식 + 도구 번들 | 전문가 페르소나 + 행동 원칙 |
-| 위치 | `skills/` (Codex 자동 주입 디렉토리) | `agents/` (codex exec --prompt-file 대상) |
-| 트리거 | 사용자 요청 키워드 매칭 (Codex `<skills_instructions>` 자동 주입) | `codex exec --prompt-file agents/<name>.md` 명시 호출 |
+| 위치 | `skills/` (Codex 자동 주입 디렉토리) | `agents/` (codex exec stdin 주입 대상: `- "<task>" < agents/<name>.md`) |
+| 트리거 | 사용자 요청 키워드 매칭 (Codex `<skills_instructions>` 자동 주입) | `codex exec - < agents/<name>.md` 명시 호출 |
 | 크기 | 작은~큰 (워크플로우) | 작은 (역할 정의) |
 | 용도 | "어떻게 하는가" | "누가 하는가" |
 

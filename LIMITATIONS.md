@@ -54,7 +54,7 @@ revfactory/harness(Claude Code 1.2.0) → Codex CLI 0.125.0 포팅 시 발생하
 
 - **Claude:** 셀프 페이싱 가능 (모델이 시간 기반 wake-up 도구 호출).
 - **Codex:** 1차 primitive 없음.
-- **완화:** OS cron + `codex exec --prompt-file <task>.md` 외부 스케줄러 사용. README에 cron 예시 안내.
+- **완화:** OS cron + `codex exec - < <task>.md` 외부 스케줄러 사용. README에 cron 예시 안내.
 
 ## 8. 자동 컨텍스트 압축 정책 차이 Unknown
 
@@ -66,7 +66,7 @@ revfactory/harness(Claude Code 1.2.0) → Codex CLI 0.125.0 포팅 시 발생하
 
 - **Claude:** description 텍스트와 사용자 발화 자동 매칭이 강함.
 - **Codex:** Codex의 매칭 강도는 실측되지 않음 (`<skills_instructions>`로 자동 주입은 확인됐으나 트리거 정확도는 모델별로 다를 수 있음).
-- **완화:** 슬래시 트리거(`/<name>`)와 명령 호출(`codex exec --prompt-file`) 양쪽을 모두 README와 AGENTS.md에 명시. 단일 트리거 경로에 의존하지 않음.
+- **완화:** 슬래시 트리거(`/<name>`)와 명령 호출(`codex exec - < <skill-or-agent>.md`) 양쪽을 모두 README와 AGENTS.md에 명시. 단일 트리거 경로에 의존하지 않음.
 
 ## 10. multi_agent feature flag 가시 표면 부재
 

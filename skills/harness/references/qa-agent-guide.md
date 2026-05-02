@@ -108,7 +108,7 @@ QA 에이전트가 `--sandbox read-only`이면 읽기만 가능하다. 하지만
 - 스크립트 실행으로 자동 대조 (API shape vs 훅 타입)
 - 필요 시 수정까지 가능
 
-**권장**: `codex exec -s workspace-write --prompt-file agents/qa-inspector.md`로 호출하되, 에이전트 정의에서 "검증 → 리포트 → 수정 요청" 프로토콜을 명시. read-only는 진정한 탐색 전용 에이전트(Explore 등가)에만 사용.
+**권장**: `codex exec -s workspace-write - "<task>" < agents/qa-inspector.md` 로 호출하되(페르소나 stdin 주입), 에이전트 정의에서 "검증 → 리포트 → 수정 요청" 프로토콜을 명시. read-only는 진정한 탐색 전용 에이전트(Explore 등가)에만 사용.
 
 ### 3-2. 체크리스트는 "존재 확인"보다 "교차 비교"를 우선하라
 

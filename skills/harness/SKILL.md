@@ -10,7 +10,7 @@ metadata:
 도메인/프로젝트에 맞는 하네스를 구성하고, 각 에이전트의 역할을 정의하며, 에이전트가 사용할 스킬을 생성하는 메타 스킬.
 
 > **Codex 환경 안내**: 본 스킬은 revfactory의 Claude Code `harness` 1.2.0을 Codex CLI로 포팅한 것이다. Claude의 1차 primitive(`Agent`/`TeamCreate`/`SendMessage`/`TaskCreate`)는 Codex에 없다. 각각 다음으로 대체된다:
-> - `Agent(...)` → `codex exec --json --ephemeral -C <iso-dir> --prompt-file agents/<name>.md "<task>"` 서브프로세스
+> - `Agent(...)` → `codex exec --json --ephemeral -C <iso-dir> - "<task>" < agents/<name>.md` 서브프로세스 (페르소나를 stdin으로 주입)
 > - `TeamCreate/SendMessage/TaskCreate/...` → MCP team server (`mcp-team-server/`)의 도구 호출
 > - `subagent_type=Explore` → `--sandbox read-only` 플래그
 >
@@ -59,7 +59,7 @@ metadata:
 | 모드 | 언제 사용 | Codex 구현 |
 |------|----------|----------|
 | **에이전트 팀** (기본) | 2명 이상 협업, 실시간 조율·피드백 교환 | MCP team server: `team_create` + `send_message` + `task_create` 호출 |
-| **서브 에이전트** (대안) | 단일 에이전트 작업, 결과만 반환하면 충분 | `codex exec --json --ephemeral -C <iso-dir> --prompt-file agents/<name>.md` 서브프로세스. 병렬은 shell `&` + `wait` |
+| **서브 에이전트** (대안) | 단일 에이전트 작업, 결과만 반환하면 충분 | `codex exec --json --ephemeral -C <iso-dir> - "<task>" < agents/<name>.md` 서브프로세스(페르소나 stdin 주입). 병렬은 shell `&` + `wait` |
 | **하이브리드** | Phase마다 특성이 다를 때 | Phase 단위로 팀/서브를 섞어 구성 |
 
 **의사결정 순서:**
@@ -133,7 +133,7 @@ skill-name/
 
 #### 4-2. Description 작성 — 적극적 트리거 유도
 
-Codex 0.125.0의 심링크 install 경로(`~/.codex/skills/<name>/`)에서는 **슬래시 명령이 노출되지 않는다** — 슬래시는 플러그인 정식 install(TUI 경유 `commands/<name>.md` 등록) 경로에서만 작동. 따라서 Codex 사용자에게는 **자연어 트리거 발화와 비대화형 호출(`codex exec --prompt-file`)을 명시**하라. description은 자연어 매칭이 잘 일어나도록 적극적("pushy")으로 작성한다.
+Codex 0.125.0의 심링크 install 경로(`~/.codex/skills/<name>/`)에서는 **슬래시 명령이 노출되지 않는다** — 슬래시는 플러그인 정식 install(TUI 경유 `commands/<name>.md` 등록) 경로에서만 작동. 따라서 Codex 사용자에게는 **자연어 트리거 발화와 비대화형 호출(`codex exec "<요청>"` 또는 stdin 주입 `codex exec - "<요청>" < <skill>.md`)을 명시**하라. description은 자연어 매칭이 잘 일어나도록 적극적("pushy")으로 작성한다.
 
 **나쁜 예:** `"PDF 문서를 처리하는 스킬"`
 **좋은 예:** `"PDF 파일 읽기, 텍스트/테이블 추출, 병합, 분할, 회전, 워터마크, 암호화, OCR 등 모든 PDF 작업을 수행. .pdf 파일을 언급하거나 PDF 산출물을 요청하면 반드시 이 스킬을 사용할 것."`
@@ -179,7 +179,7 @@ Codex 0.125.0의 심링크 install 경로(`~/.codex/skills/<name>/`)에서는 **
 [오케스트레이터/리더]
     ├── team_create({team_name, members})
     ├── task_create({...}) × N (의존성 포함)
-    ├── 팀원 prompt 호출 (codex exec --prompt-file agents/<name>.md)
+    ├── 팀원 prompt 호출 (codex exec - "<task>" < agents/<name>.md)
     │     팀원은 매 turn 시작 시 recv_messages 폴링, 끝에 send_message 호출
     ├── task_list({status: ["pending","in_progress"]}) 폴링
     ├── 결과 수집 (task_get_output)
@@ -252,7 +252,7 @@ Phase마다 다른 모드를 섞어 구성한다. 자주 쓰이는 조합:
 
 **트리거:** {도메인} 관련 작업 요청 시:
 - 인터랙티브: `codex` 진입 후 `/{orchestrator-skill-name}`
-- 비대화형: `codex exec --prompt-file skills/{orchestrator-skill-name}/SKILL.md "<요청>"`
+- 비대화형: `codex exec "<요청>"` (자연어 매칭). 또는 `codex exec - "<요청>" < skills/{orchestrator-skill-name}/SKILL.md`로 본문을 stdin으로 주입.
 
 **변경 이력:**
 | 날짜 | 변경 내용 | 대상 | 사유 |
@@ -299,7 +299,7 @@ Phase마다 다른 모드를 섞어 구성한다. 자주 쓰이는 조합:
 생성된 각 스킬에 대해 실제 실행 테스트를 수행한다:
 
 1. **테스트 프롬프트 작성** — 각 스킬에 대해 2~3개의 현실적인 테스트 프롬프트를 작성한다.
-2. **With-skill vs Without-skill 비교 실행** — `codex exec --prompt-file <skill>` vs `codex exec` 두 호출을 병렬로 수행하여 부가가치 확인.
+2. **With-skill vs Without-skill 비교 실행** — `codex exec - "<task>" < <skill>.md` (skill 본문 stdin 주입) vs `codex exec "<task>"` (skill 없이) 두 호출을 병렬로 수행하여 부가가치 확인.
 3. **결과 평가** — 정성적(사용자 리뷰) + 정량적(assertion) 평가.
 4. **반복 개선 루프** — 피드백을 일반화하여 스킬 수정 후 재테스트.
 5. **반복 패턴 번들링** — 공통 코드는 `scripts/`에 번들링.
@@ -311,7 +311,7 @@ Phase마다 다른 모드를 섞어 구성한다. 자주 쓰이는 조합:
 1. **Should-trigger 쿼리** (8~10개) — 스킬을 트리거해야 하는 다양한 표현
 2. **Should-NOT-trigger 쿼리** (8~10개) — near-miss 쿼리
 
-> Codex 0.125.0 심링크 install 경로에서는 슬래시 명령이 노출되지 않는다. 자연어 매칭 + `codex exec --prompt-file` 양쪽이 모두 동작하는지 확인한다. 활성화 검증: `codex debug prompt-input "x" 2>/dev/null | grep -o '<skill-name>:[^"]*' | head -1`.
+> Codex 0.125.0 심링크 install 경로에서는 슬래시 명령이 노출되지 않는다. 자연어 매칭 + `codex exec` (인라인 prompt) + stdin 주입 (`codex exec - "<요청>" < <skill>.md`) 모두 동작하는지 확인한다. 활성화 검증: `codex debug prompt-input "x" 2>/dev/null | grep -o '<skill-name>:[^"]*' | head -1`.
 
 #### 6-5. 드라이런 테스트
 
@@ -402,7 +402,8 @@ Codex 인터랙티브에서 다음 발화 중 하나를 입력하세요:
 
 ### 비대화형 (스크립트/CI)
 \`\`\`bash
-codex exec --prompt-file skills/<orchestrator-skill-name>/SKILL.md "<요청>"
+codex exec "<요청>"
+# 또는: codex exec - "<요청>" < skills/<orchestrator-skill-name>/SKILL.md
 \`\`\`
 
 ### 활성화 확인

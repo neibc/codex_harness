@@ -20,9 +20,9 @@
 
 | 작업 단계 | 호출 에이전트 |
 |---|---|
-| API 스펙 설계 / 라우팅 / DB 모델 | `codex exec --prompt-file agents/backend-architect.md` |
-| 통합 테스트 시나리오 + Vitest 구현 | `codex exec --prompt-file agents/api-tester.md` |
-| README / OpenAPI / inline JSDoc 갱신 | `codex exec --prompt-file agents/docs-maintainer.md` |
+| API 스펙 설계 / 라우팅 / DB 모델 | `codex exec - "<task>" < agents/backend-architect.md` |
+| 통합 테스트 시나리오 + Vitest 구현 | `codex exec - "<task>" < agents/api-tester.md` |
+| README / OpenAPI / inline JSDoc 갱신 | `codex exec - "<task>" < agents/docs-maintainer.md` |
 
 ## MCP 팀 도구 (위임이 필요한 경우)
 

@@ -17,7 +17,8 @@
 비대화형 진입:
 
 ```bash
-codex exec --prompt-file skills/harness/SKILL.md "<요청>"
+codex exec "<요청>"
+# 또는 SKILL.md 본문을 stdin으로 주입: codex exec - "<요청>" < skills/harness/SKILL.md
 ```
 
 ## MCP 도구 (Team 에뮬레이션)
