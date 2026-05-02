@@ -52,13 +52,15 @@ echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | node dist/index.js
 
 ## Codex 등록
 
-플러그인 매니페스트(`.codex-plugin/plugin.json`)에서 `mcpServers` 키가 `./.mcp.json`을 가리키며, 그 파일이 자동으로 본 서버를 stdio 변형으로 등록한다. 수동 등록이 필요하면:
+**Codex 0.125.x에서는 manual 등록이 canonical path입니다.** 다음 명령으로 등록:
 
 ```bash
 codex mcp add team --env TEAM_STORAGE_PATH=$HOME/.codex/teams.sqlite \
   -- node "$(pwd)/dist/index.js"
 codex mcp list   # team 항목이 보여야 함
 ```
+
+> `.codex-plugin/plugin.json`의 `mcpServers` 키와 `./.mcp.json`은 향후 Codex가 plugin install CLI를 추가했을 때를 위한 **forward-compat schema**입니다. 현재(0.125.x)에는 등록 동작에 영향 없음 — 위 `codex mcp add` 명령이 실제 등록 경로입니다.
 
 ## 저장소
 

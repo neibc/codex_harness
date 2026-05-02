@@ -1,0 +1,13 @@
+{
+  "name": "node-cli-example",
+  "version": "0.0.1",
+  "description": "Tiny Express backend used as the 'before' state in codex_harness's example.",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
