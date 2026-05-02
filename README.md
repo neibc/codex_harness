@@ -520,6 +520,90 @@ Issues, PRs, and reports of mapping gaps are welcome. Please read [`CONTRIBUTING
 
 ---
 
+## 제거 / Uninstall
+
+**KR**
+
+설치는 두 단계(MCP 등록 + 옵션 마켓 등록)였으니 제거도 동일한 두 곳을 정리합니다. 본 머신에서 실측 확인된 절차:
+
+```bash
+# 1) MCP 팀 서버 등록 해제
+codex mcp remove team
+codex mcp list                # team이 사라졌는지 확인
+
+# 2) [옵션] 마켓플레이스 등록 해제 (마켓을 등록했다면)
+codex plugin marketplace remove codex-harness-marketplace
+
+# 3) [옵션] 마켓 add 단계에서 codex 인터랙티브 메뉴로 플러그인을 활성화했다면,
+#    config.toml에 남은 plugin 엔트리도 제거. 자동으로 같이 지워지지 않을 수 있습니다.
+#    아래 한 줄을 ~/.codex/config.toml에서 직접 삭제하세요:
+#    [plugins."codex-harness@codex-harness-marketplace"]
+#    enabled = true
+
+# 4) 영속 데이터 정리 (팀 협업 sqlite — 다른 프로젝트와 공유 안 했다면 삭제 안전)
+rm -f ~/.codex/teams.sqlite
+
+# 5) 빌드 산출물 정리 (저장소 자체를 보존하면서 fresh 상태로 되돌리려면)
+cd /path/to/codex_harness
+rm -rf mcp-team-server/node_modules mcp-team-server/dist
+
+# 6) 저장소 자체를 지우려면
+cd ~ && rm -rf /path/to/codex_harness
+```
+
+검증:
+
+```bash
+codex mcp list                                                          # No MCP servers configured yet.
+grep -E 'codex-harness|teams\.sqlite' ~/.codex/config.toml              # 출력 없으면 정리 완료
+ls ~/.codex/teams.sqlite                                                 # No such file
+```
+
+> 다른 Codex 플러그인(`github@openai-curated`, `vercel-plugin@plugins-cli` 등)과 그들의 설정은 **건드리지 않습니다** — 위 명령은 codex-harness 관련 항목만 정리합니다.
+
+**EN**
+
+Install was two steps (MCP registration + optional marketplace registration), so uninstall cleans the same two places. Sequence verified on this machine:
+
+```bash
+# 1) Unregister the MCP team server
+codex mcp remove team
+codex mcp list                # confirm "team" is gone
+
+# 2) [Optional] Unregister the marketplace (if you added it)
+codex plugin marketplace remove codex-harness-marketplace
+
+# 3) [Optional] If you enabled the plugin from the codex interactive
+#    menu after `marketplace add`, also remove the lingering plugin
+#    entry from ~/.codex/config.toml — it may not be cleaned up
+#    automatically. Delete this block by hand:
+#    [plugins."codex-harness@codex-harness-marketplace"]
+#    enabled = true
+
+# 4) Delete persistent data (the team-collaboration sqlite — safe to drop
+#    if you did not share it across other projects)
+rm -f ~/.codex/teams.sqlite
+
+# 5) Reset build artifacts while keeping the repo (for a fresh re-install test)
+cd /path/to/codex_harness
+rm -rf mcp-team-server/node_modules mcp-team-server/dist
+
+# 6) Or delete the repo entirely
+cd ~ && rm -rf /path/to/codex_harness
+```
+
+Verification:
+
+```bash
+codex mcp list                                                          # → "No MCP servers configured yet."
+grep -E 'codex-harness|teams\.sqlite' ~/.codex/config.toml              # → no output means clean
+ls ~/.codex/teams.sqlite                                                 # → No such file
+```
+
+> Other Codex plugins (e.g. `github@openai-curated`, `vercel-plugin@plugins-cli`) and their settings are **not touched** — the commands above only clean codex-harness-related entries.
+
+---
+
 ## 라이선스 / License
 
 [Apache License 2.0](LICENSE) — same as upstream [`revfactory/harness`](https://github.com/revfactory/harness).
