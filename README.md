@@ -61,7 +61,7 @@ node --version        # v18 이상 권장
 
 ```bash
 # 1) 저장소 클론
-git clone https://github.com/<your-username>/codex_harness.git
+git clone https://github.com/neibc/codex_harness.git
 cd codex_harness
 
 # 2) MCP 팀 에뮬레이션 서버 빌드
@@ -85,7 +85,7 @@ codex mcp list        # team 항목이 보이면 OK
 
 ```bash
 # 1) Clone
-git clone https://github.com/<your-username>/codex_harness.git
+git clone https://github.com/neibc/codex_harness.git
 cd codex_harness
 
 # 2) Build the MCP team-emulation server
