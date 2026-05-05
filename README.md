@@ -257,6 +257,40 @@ The `.codex-plugin/`, `.agents/plugins/marketplace.json`, and `.mcp.json` files 
 
 The repository is dual-runtime: it ships as a Codex plugin AND contains the Claude Code build pipeline (`.claude/`) that regenerates the Codex-side files when Codex CLI ships a new version.
 
+## Agent Team 에뮬레이션 — 무엇이 보존되고 무엇이 다른가 / Equivalence with Claude Code's Agent Team
+
+Claude Code의 (실험적) Agent Team primitive를 본 포트가 어디까지 재현하는지의 정확한 경계.
+
+### Primitive 매핑
+
+| Claude Code | Codex 측 (MCP) | 구현 위치 |
+|---|---|---|
+| `TeamCreate` | `team_create` | `mcp-team-server/src/tools.ts` |
+| `SendMessage` (1:1, `to:"*"` 브로드캐스트) | `send_message` | 동상 |
+| (런타임이 자동 전달) | `recv_messages` (폴링) | 동상 |
+| `TaskCreate` / `TaskUpdate` / `TaskList` | `task_create` / `task_update` / `task_list` / `task_get_output` | 동상 |
+| (런타임 종료) | `team_destroy` | 동상 |
+
+저장소: `~/.codex/teams.sqlite` (WAL 모드, append-only `messages` + 작업 보드 `tasks`). **여러 `codex exec` 서브프로세스가 같은 SQLite를 공유하므로 에이전트들끼리 실제로 메시지·작업 상태를 주고받는다.**
+
+### 핵심 격차 — push vs poll
+
+Claude Code는 `SendMessage` 도착 즉시 수신자가 깨어난다(runtime scheduler). Codex 측에는 그 스케줄러가 없으므로, **수신자가 매 턴 `recv_messages({since: <cursor>})`를 직접 호출해야 발견**된다 ([LIMITATIONS.md #1](LIMITATIONS.md)).
+
+이 차이를 보완하는 두 장치:
+- `skills/harness/references/orchestrator-template.md`이 모든 팀원 prompt에 *"매 turn 시작 시 `recv_messages` 호출"*을 강제 주입
+- 폴링 간격 지수 증가 (1s → 2s → 4s … max 30s) — 부하 제어
+
+### 실효성
+
+- **잘 됨**: orchestrator → worker 분배 + 결과 회수, 브로드캐스트 종료 신호(`<TEAM_DONE>`), 공유 task 보드 기반 조율
+- **약함**: 짧은 ping-pong 대화 — 폴링 간격만큼 지연
+- **미해결**: Codex `multi_agent` feature flag가 `stable`이지만 1차 Task 도구 표면이 아직 없어 MCP 우회 ([LIMITATIONS.md #10](LIMITATIONS.md)). 향후 Codex가 노출하면 폴링 오버헤드 제거 가능
+
+요약하면, Claude Code의 Agent Team이 제공하던 "여러 에이전트가 한 팀에서 메시지+태스크를 공유"라는 효과는 **재현된다**. 다만 "즉시 깨어남" 같은 런타임 시맨틱은 폴링으로 변환된 것이라, 동등(equivalent)이 아니라 동형(isomorphic via polling).
+
+**EN summary**: All Claude-Code Agent-Team primitives map to MCP tools in `mcp-team-server` (`team_create`, `send_message`, `recv_messages`, `task_*`, `team_destroy`) over a shared SQLite log at `~/.codex/teams.sqlite`. Multiple `codex exec` subprocesses really do exchange messages and task state through it. The one structural gap is that Claude's `SendMessage` wakes the recipient instantly via the runtime scheduler, while the Codex port requires recipients to poll `recv_messages` each turn (mitigated by mandated polling in `skills/harness/references/orchestrator-template.md` and 1s→30s exponential backoff). Works well for orchestrator/worker fan-out and broadcast termination; weaker for tight ping-pong dialogue. Not equivalent — *isomorphic via polling*.
+
 ## 디렉토리 / Directory
 
 ```
