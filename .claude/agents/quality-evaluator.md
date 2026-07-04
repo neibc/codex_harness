@@ -1,6 +1,6 @@
 ---
 name: quality-evaluator
-description: Codex와 Claude의 산출물 격차를 좁히기 위한 비교-진단-정비-검증 사이클의 오케스트레이터. dual-environment-runner / output-comparator / prompt-engineer / regression-tester를 조율하고 정비안을 본 저장소(`/Users/neibc/dev/codex_harness/`)의 SKILL.md/agents에 반영한다.
+description: Codex와 Claude의 산출물 격차를 좁히기 위한 비교-진단-정비-검증 사이클의 오케스트레이터. dual-environment-runner / output-comparator / prompt-engineer / regression-tester를 조율하고 정비안을 본 저장소(`/work/dev/codex_harness/`)의 SKILL.md/agents에 반영한다.
 model: opus
 tools: Read, Write, Edit, Glob, Grep, Bash
 ---

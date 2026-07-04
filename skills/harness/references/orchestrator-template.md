@@ -230,6 +230,7 @@ wait $PID_1 $PID_2
 ### Phase 3: 통합
 1. `_workspace/{agent}/last.txt`에서 마지막 메시지 회수
 2. 또는 `events.jsonl`에서 `item.completed.item.type=="agent_message"` 누적
+   - stdout 각 라인을 파싱하기 전 `{`로 시작하는지 확인하고, 아니면 skip한다(등록된 다른 MCP 서버의 auth 실패 로그 등이 stream 중간에 섞여 나올 수 있음 — 01 §1.1 실측).
 3. 통합 로직 적용 → 최종 산출물
 
 ### Phase 4: 정리

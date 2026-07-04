@@ -1,10 +1,10 @@
 # AGENTS.md — codex_harness
 
-이 저장소는 Codex CLI 0.125.0+ 환경에서 동작하는 하네스 메타-스킬이다. Codex는 cwd의 `AGENTS.md` 한 개만 자동 로드하므로(upward search 없음), 본 파일에 트리거 + MCP 도구 표를 집약한다.
+이 저장소는 Codex CLI 0.136.0+ 환경에서 동작하는 하네스 메타-스킬이다. Codex는 cwd의 `AGENTS.md` 한 개만 자동 로드하므로(upward search 없음), 본 파일에 트리거 + MCP 도구 표를 집약한다.
 
 ## 트리거 — 자연어 발화로만
 
-**본 플러그인은 슬래시 명령(`/<name>`)을 노출하지 않는다.** Codex 0.125.0에서 슬래시 명령은 플러그인의 `commands/<name>.md` + 정식 install(TUI 경유) 경로에서만 등록되며, 본 저장소가 사용하는 심링크 install 경로(`~/.codex/skills/harness`)는 **스킬(skills) 메커니즘**만 활성화한다. 스킬은 description 자연어 매칭으로 활성화된다.
+**본 플러그인은 슬래시 명령(`/<name>`)을 노출하지 않는다.** Codex에서 슬래시 명령은 플러그인의 `commands/<name>.md`가 등록될 때만 노출되는데, 본 플러그인은 `commands/`를 **동봉하지 않는다** — 따라서 정식 marketplace install 경로에서도, `--dev` 심링크 경로(`~/.codex/skills/harness`)에서도 슬래시는 없다. 두 경로 모두 **스킬(skills) 메커니즘**만 활성화하며, 스킬은 description 자연어 매칭으로 활성화된다.
 
 다음 발화로 활성화:
 
@@ -12,7 +12,7 @@
 - "하네스를 점검해줘" / "하네스 감사해줘" / "에이전트와 스킬을 동기화해줘"
 - "build a harness for ..." / "design an agent team for ..."
 
-진입 후 `skills/harness/SKILL.md` (메인 스킬, `~/.codex/skills/harness/`에 심링크로 활성화됨)이 모델 컨텍스트에 자동 주입되며, 본문의 7-Phase 워크플로우(도메인 분석 → 팀 설계 → 에이전트/스킬 생성 → 검증 → 진화)를 따른다.
+진입 후 `skills/harness/SKILL.md` (메인 스킬, `~/.codex/skills/harness` 심링크로 활성화됨 — canonical)이 모델 컨텍스트에 자동 주입되며, 본문의 7-Phase 워크플로우(도메인 분석 → 팀 설계 → 에이전트/스킬 생성 → 검증 → 진화)를 따른다.
 
 비대화형 진입:
 
@@ -42,13 +42,13 @@ codex exec "<요청>"
 
 ## 알려진 손실 / 한계
 
-Claude Code 원본의 일부 primitive는 Codex 등가로 대체되었다. 10개 손실 항목 — [`LIMITATIONS.md`](LIMITATIONS.md).
+Claude Code 원본의 일부 primitive는 Codex 등가로 대체되었다. 15개 손실 항목 — [`LIMITATIONS.md`](LIMITATIONS.md).
 
 핵심 요지:
 - `SendMessage` 동기 도착 통지 → polling
 - `subagent_type=Explore/Plan` → `--sandbox read-only` + prompt 지시문
 - `WebFetch`/`WebSearch` 빌트인 → 외부 MCP 서버
-- `PreToolUse`/`PostToolUse` hook 이벤트 → `--ask-for-approval` 정책 (Codex 0.125.0 기준 미실측)
+- `PreToolUse`/`PostToolUse` hook 이벤트 → `--ask-for-approval` 정책 (Codex 0.136: hook은 `SessionStart`/`SessionEnd`만, trust-gated. 본 플러그인 hook 미동봉)
 
 ## 변경 이력
 
@@ -56,3 +56,5 @@ Claude Code 원본의 일부 primitive는 Codex 등가로 대체되었다. 10개
 |------|----------|
 | 2026-05-02 | 초기 구성 (revfactory/harness 1.2.0에서 fork) |
 | 2026-05-02 | dev-time 페르소나 5개 + hooks/ 제거 — ship surface slim down |
+| 2026-07-03 | 0.136 재검증 + 재사용 검토(3-0/4-0) 이식 |
+| 2026-07-04 | 설치 canonical 환원: 심링크 + `codex mcp add` 기본, marketplace 2단계는 `--marketplace` 옵트인(codex 0.136 루트-레이아웃 미지원 — LIMITATIONS #15) |

@@ -2,9 +2,9 @@
   "name": "codex-harness-marketplace",
   "interface": {
     "displayName": "codex-harness",
-    "shortDescription": "Codex port of revfactory/harness — Agent Team & Skill Architect.",
+    "shortDescription": "Codex port of revfactory/harness — the team-architecture factory.",
     "developerName": "codex_harness contributors",
-    "websiteURL": "https://github.com/revfactory/codex_harness"
+    "websiteURL": "https://github.com/neibc/codex_harness"
   },
   "plugins": [
     {
@@ -13,7 +13,7 @@
         "source": "local",
         "path": "./"
       },
-      "description": "Agent Team & Skill Architect ported to Codex CLI. Provides skills/, agents/, MCP team-emulation server.",
+      "description": "The team-architecture factory for Codex CLI. Designs multi-agent teams and generates skills — six patterns: Pipeline, Fan-out/Fan-in, Expert Pool, Producer-Reviewer, Supervisor, Hierarchical Delegation. Provides skills/, MCP team-emulation server.",
       "category": "Productivity",
       "policy": {
         "installation": "AVAILABLE",

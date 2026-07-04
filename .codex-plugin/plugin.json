@@ -1,7 +1,7 @@
 {
   "name": "codex-harness",
-  "version": "0.2.0",
-  "description": "Agent Team & Skill Architect — Codex CLI port of revfactory/harness 1.2.0.",
+  "version": "0.3.0",
+  "description": "The team-architecture factory for Codex CLI. Designs multi-agent teams and generates skills — six patterns: Pipeline, Fan-out/Fan-in, Expert Pool, Producer-Reviewer, Supervisor, Hierarchical Delegation. Codex port of revfactory/harness.",
   "author": {
     "name": "codex_harness contributors",
     "url": "https://github.com/neibc/codex_harness"
@@ -11,17 +11,28 @@
   "license": "Apache-2.0",
   "keywords": [
     "harness",
+    "harness-factory",
+    "team-architecture-factory",
     "agent-team",
+    "multi-agent",
     "skill-architect",
     "meta-skill",
     "orchestration",
-    "codex"
+    "codex-plugin",
+    "codex",
+    "pipeline",
+    "fan-out-fan-in",
+    "expert-pool",
+    "producer-reviewer",
+    "supervisor",
+    "hierarchical-delegation",
+    "mcp-team-server"
   ],
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "codex-harness",
-    "shortDescription": "Meta-skill that designs agent teams and generates skills, ported to Codex.",
+    "shortDescription": "The team-architecture factory — designs agent teams & generates skills. Codex port of revfactory/harness.",
     "category": "Productivity",
     "capabilities": ["Interactive", "Write"],
     "defaultPrompt": [

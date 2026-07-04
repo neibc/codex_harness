@@ -52,7 +52,7 @@ echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | node dist/index.js
 
 ## Codex 등록
 
-**Codex 0.125.x에서는 manual 등록이 canonical path입니다.** 다음 명령으로 등록:
+**Codex 0.136에서는 `codex mcp add` 수동 등록이 canonical path입니다.** 다음 명령으로 등록:
 
 ```bash
 codex mcp add team --env TEAM_STORAGE_PATH=$HOME/.codex/teams.sqlite \
@@ -60,7 +60,7 @@ codex mcp add team --env TEAM_STORAGE_PATH=$HOME/.codex/teams.sqlite \
 codex mcp list   # team 항목이 보여야 함
 ```
 
-> `.codex-plugin/plugin.json`의 `mcpServers` 키와 `./.mcp.json`은 향후 Codex가 plugin install CLI를 추가했을 때를 위한 **forward-compat schema**입니다. 현재(0.125.x)에는 등록 동작에 영향 없음 — 위 `codex mcp add` 명령이 실제 등록 경로입니다.
+> `.codex-plugin/plugin.json`의 `mcpServers` 키와 `./.mcp.json`은 표준 마켓플레이스 install이 **자동 등록하는 등록 소스**입니다 (실측 2026-07-04: 서브디렉토리 레이아웃 플러그인이면 `codex plugin add` 후 `codex mcp list`에 team이 자동 등장, `${CODEX_PLUGIN_ROOT}` 런타임 해소). 다만 codex 0.136 마켓 스캐너는 플러그인이 마켓 루트의 **서브디렉토리**에 있어야 해소하는데, 본 저장소는 루트==플러그인 레이아웃(`source.path:"./"`)이라 마켓 경로가 실패합니다 ([`../LIMITATIONS.md`](../LIMITATIONS.md) §15). 그래서 위 `codex mcp add`(심링크 canonical)가 실제 등록 경로이고, 마켓은 `--marketplace` 옵트인입니다.
 
 ## 저장소
 

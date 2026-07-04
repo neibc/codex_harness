@@ -11,8 +11,8 @@
 #   1. git fetch + 변경 사항 요약
 #   2. fast-forward git pull (충돌 시 중단)
 #   3. mcp-team-server 의존성/빌드 갱신 (변경된 경우만)
-#   4. 활성화 상태 검증 (codex mcp list / debug prompt-input)
-#   5. 마켓플레이스 등록되어 있으면 codex plugin marketplace upgrade
+#   4. 활성화 상태 검증 (codex mcp list + codex debug prompt-input — canonical 심링크 기준)
+#   5. (옵션) --marketplace 로 등록한 마켓이 있으면 codex plugin marketplace upgrade
 #
 # 필요 시: cron / launchd / GitHub Actions로 주기 실행 가능 (README 참조).
 
@@ -123,23 +123,24 @@ step "4/5 활성화 검증"
 if ! command -v codex >/dev/null 2>&1; then
   warn "codex CLI 부재 — 활성화 검증 생략"
 else
+  # canonical(심링크 + codex mcp add) 설치에서는 team MCP가 codex mcp list에 등장한다.
+  # (--marketplace 옵트인은 codex 0.136 루트-레이아웃 미지원으로 실패/폴백 — LIMITATIONS #15)
   if codex mcp list 2>&1 | grep -q '^team\b'; then
     ok "codex mcp list: team 등록됨"
   else
-    warn "codex mcp list 에 team 없음. 다음 명령으로 재등록 필요:"
+    warn "codex mcp list에 team 없음 — canonical(심링크) 설치라면 재등록 필요:"
     warn "    codex mcp add team --env TEAM_STORAGE_PATH=\$HOME/.codex/teams.sqlite \\"
     warn "      -- node \"$REPO/mcp-team-server/dist/index.js\""
   fi
 
-  if [ -L "$HOME/.codex/skills/harness" ] || [ -d "$HOME/.codex/skills/harness" ]; then
-    if codex debug prompt-input "x" 2>/dev/null | grep -q 'harness:harness'; then
-      ok "harness 스킬 활성화 확인"
-    else
-      warn "harness 스킬이 prompt-input에 안 보임"
-    fi
+  if codex debug prompt-input "x" 2>/dev/null | grep -q 'harness:harness'; then
+    ok "harness 스킬 활성화 확인"
+  elif [ -L "$HOME/.codex/skills/harness" ] || [ -d "$HOME/.codex/skills/harness" ]; then
+    warn "harness 스킬이 prompt-input에 안 보임 (심링크는 존재) — codex 재시작 후 재확인"
   else
-    warn "~/.codex/skills/harness 심링크/디렉토리 부재. 다음으로 활성화:"
+    warn "harness 스킬이 prompt-input에 안 보임. 재활성화(canonical):"
     warn "    ln -sfn \"$REPO/skills/harness\" \"\$HOME/.codex/skills/harness\""
+    warn "    또는 ./install.sh 재실행"
   fi
 fi
 
@@ -151,7 +152,9 @@ if ! command -v codex >/dev/null 2>&1; then
 elif [ ! -f "$CONFIG" ] || ! grep -q '^\[marketplaces\.codex-harness-marketplace\]' "$CONFIG" 2>/dev/null; then
   ok "마켓플레이스 미등록 — 스킵"
 elif awk '/^\[marketplaces\.codex-harness-marketplace\]/{f=1;next} /^\[/{f=0} f && /^source_type/' "$CONFIG" | grep -q '"local"'; then
-  ok "로컬 source 마켓 (이 저장소 자체) — upgrade 불필요"
+  ok "로컬 source 마켓 (이 저장소 자체) — marketplace upgrade 불필요"
+  hint "canonical 설치(심링크)는 skills/AGENTS 변경이 다음 codex 세션에 자동 반영됩니다."
+  hint "(--marketplace 옵트인은 codex 0.136 루트-레이아웃 미지원 — LIMITATIONS #15)"
 else
   if codex plugin marketplace upgrade codex-harness-marketplace >/dev/null 2>&1; then
     ok "git/url source 마켓 메타데이터 갱신"

@@ -5,7 +5,7 @@
 > A meta-skill that gives the OpenAI Codex CLI a project-specific AI agent team — port of `revfactory/harness` from Claude Code.
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Codex CLI](https://img.shields.io/badge/Codex_CLI-0.125.0%2B-black)](https://github.com/openai/codex)
+[![Codex CLI](https://img.shields.io/badge/Codex_CLI-0.136.0%2B-black)](https://github.com/openai/codex)
 [![Status: beta](https://img.shields.io/badge/status-beta-orange)](#-한계--limitations-요약)
 
 ---
@@ -64,17 +64,19 @@ cd codex_harness
 ./install.sh
 ```
 
-`install.sh`가 처리하는 것:
-1. node 18+ / codex 0.125.0+ 사전 검사
+`install.sh`가 처리하는 것 (기본 = 심링크 canonical):
+1. node 18+ / codex 0.136.0+ 사전 검사
 2. `mcp-team-server` 빌드 (`npm install` + `tsc`)
-3. `codex mcp add team` MCP 서버 등록
+3. `codex mcp add team` — MCP 팀 서버 등록
 4. `~/.codex/skills/harness` 심링크 (저장소 변경 즉시 반영)
-5. 활성화 검증 (`codex debug prompt-input`)
+5. 활성화 검증 (`codex mcp list` + `codex debug prompt-input`)
 6. 다음 액션 안내 출력
 
-이미 부분 설치되어 있으면 해당 단계만 skip / 충돌 시 안전 중단. 옵션: `--skip-build`, `--copy` (심링크 대신 복사), `--no-color`.
+이미 부분 설치되어 있으면 해당 단계만 skip / 충돌 시 안전 중단. 옵션: `--marketplace` (옵트인 마켓 모드, 아래 박스 참조), `--skip-build`, `--copy` (심링크 대신 복사), `--no-color`. (`--dev`는 기본 모드의 별칭으로 계속 허용됩니다.)
 
-### 수동 설치 / Manual install
+> 본 플러그인은 hook을 동봉하지 않으므로 Codex 0.136의 hook trust 프롬프트가 발생하지 않습니다. (직접 hook을 추가할 경우에만 사전 trust 또는 `--dangerously-bypass-hook-trust`가 필요합니다.)
+
+### 수동 설치 — 심링크 canonical / Manual install (canonical)
 
 (자동화가 막힐 때만 사용)
 
@@ -87,6 +89,18 @@ mkdir -p ~/.codex/skills && ln -sfn "$(pwd)/skills/harness" ~/.codex/skills/harn
 codex debug prompt-input "x" 2>/dev/null | grep -o 'harness:[^"]*' | head -1   # 활성화 확인
 ```
 
+### ⚠️ 마켓플레이스 2단계 설치 — 현재 미지원 (opt-in / known limitation)
+
+**KR**: `codex plugin marketplace add` → `codex plugin add`의 표준 마켓 경로는 **codex 0.136에서 본 저장소에 대해 동작하지 않습니다.** codex 0.136의 마켓 스캐너는 플러그인이 마켓 루트의 **서브디렉토리**(예: `./plugins/<name>/`)에 있어야 해소하는데, 본 저장소는 "루트 == 플러그인 == 마켓"의 듀얼-네이처 레이아웃(`marketplace.json`의 `source.path: "./"`)이라 `codex plugin add`가 `plugin ... was not found`로 실패합니다 (실측: 2026-07-04, codex 0.136.0 — 서브디렉토리 레이아웃에서는 성공, 루트 레이아웃에서는 실패). 자세한 근거와 완화책은 [LIMITATIONS.md #15](LIMITATIONS.md).
+
+`./install.sh --marketplace`로 시도할 수 있으나, **실패 시 자동으로 심링크(canonical) 모드로 폴백**합니다. 듀얼-네이처 설계를 보존하기 위해 서브디렉토리 재배치는 채택하지 않았습니다.
+
+```bash
+./install.sh --marketplace     # 실패 시 심링크 모드로 자동 폴백
+```
+
+**EN**: The standard marketplace path (`codex plugin marketplace add` → `codex plugin add`) **does not work for this repository on codex 0.136.** The 0.136 marketplace scanner only resolves plugins that live in a **subdirectory** of the marketplace root (e.g. `./plugins/<name>/`); this repo's dual-nature "root == plugin == marketplace" layout (`source.path: "./"` in `marketplace.json`) makes `codex plugin add` fail with `plugin ... was not found` (verified 2026-07-04 on codex 0.136.0: succeeds with a subdirectory layout, fails with the root layout). `./install.sh --marketplace` attempts it but **auto-falls back to symlink (canonical) mode on failure.** We keep the dual-nature layout rather than relocating into a subdirectory — see [LIMITATIONS.md #15](LIMITATIONS.md).
+
 ---
 
 ## 🎯 첫 사용 / First use
@@ -96,7 +110,7 @@ codex
 > ANSI SQL을 지원하는 python DB서버와 클라이언트를 개발하는 하네스를 구성해줘
 ```
 
-도메인을 함께 적어주면 7-Phase 워크플로우(도메인 분석 → 팀 아키텍처 → 에이전트/스킬 생성 → 통합·오케스트레이션 → 검증 → 진화)가 그 도메인에 맞춰 시작됩니다. **슬래시 명령(`/harness`)은 0.125.x 심링크 경로에서 노출되지 않으므로 자연어 발화로만 활성화**됩니다.
+도메인을 함께 적어주면 7-Phase 워크플로우(도메인 분석 → 팀 아키텍처 → 에이전트/스킬 생성 → 통합·오케스트레이션 → 검증 → 진화)가 그 도메인에 맞춰 시작됩니다. **슬래시 명령(`/harness`)은 본 플러그인이 `commands/`를 동봉하지 않아 마켓/심링크 어느 경로에서도 노출되지 않으므로 자연어 발화로만 활성화**됩니다.
 
 비대화형 / CI:
 
@@ -132,9 +146,12 @@ codex exec - "ANSI SQL을 지원하는 python DB서버와 클라이언트를 개
 | 산출물 깊이 | Claude 대비 짧고 단순 — 아래 "솔직한 안내" 참조 |
 | MCP 메시지 전달 | polling 기반 (Claude의 push 대비 응답 지연 가능) |
 | 데이터 저장 | `~/.codex/teams.sqlite`에 메시지·작업 본문 평문 저장 — [SECURITY.md](SECURITY.md) |
-| Codex 버전 의존 | 0.125.0 검증, 0.128.0 smoke 통과. 미래 버전 회귀 가능 |
+| 마켓플레이스 설치 | codex 0.136 루트-레이아웃 미지원 — 심링크가 canonical, 마켓은 `--marketplace` 옵트인 ([#15](LIMITATIONS.md)) |
+| Codex 버전 의존 | 0.136.0 검증(0.125.0 최초 검증). 미래 버전 회귀 가능 |
+| Hook trust (0.136) | hook 미동봉이라 현재 무영향 — 직접 추가 시 사전 trust 필요 ([#4](LIMITATIONS.md)) |
+| Profile v2 (0.136) | in-file `[profiles.*]` 진부화 가능 — 호출 시점 `-m <model>` 우선 ([#12](LIMITATIONS.md)) |
 
-10개 손실 항목 전체: [LIMITATIONS.md](LIMITATIONS.md).
+15개 손실 항목 전체: [LIMITATIONS.md](LIMITATIONS.md).
 
 ### 솔직한 안내 — Codex의 작업 분화/깊이 격차 / Honest note on output depth
 
@@ -165,7 +182,7 @@ codex exec - "ANSI SQL을 지원하는 python DB서버와 클라이언트를 개
 
 ## 업데이트 / Update
 
-> 이 섹션과 [제거](#-제거--uninstall) 섹션의 `/path/to/codex_harness`는 **본 저장소를 `git clone`한 경로**를 의미합니다 (예: `~/dev/codex_harness`). 본인 환경의 실제 경로로 바꿔서 실행하세요.
+> 이 섹션과 [제거](#-제거--uninstall) 섹션의 `/path/to/codex_harness`는 **본 저장소를 `git clone`한 경로**를 의미합니다 (예: `/work/dev/codex_harness`). 본인 환경의 실제 경로로 바꿔서 실행하세요.
 
 ```bash
 cd /path/to/codex_harness && ./bin/update.sh
@@ -206,7 +223,7 @@ ls ~/.codex/skills/harness 2>&1                         # No such file or direct
 
 ### 1. 풀고 싶은 문제
 
-revfactory의 `harness`는 Claude Code의 `Agent`/`TeamCreate`/`SendMessage`/`TaskCreate` 1차 primitive를 **총 85회** 호출합니다. Codex CLI 0.125.0은 같은 영역(에이전틱 코딩 CLI)이지만 이런 멀티-에이전트 primitive를 **사용자가 호출 가능한 표면으로 제공하지 않습니다**. 따라서 텍스트 번역만으로는 동작 불가.
+revfactory의 `harness`는 Claude Code의 `Agent`/`TeamCreate`/`SendMessage`/`TaskCreate` 1차 primitive를 **총 85회** 호출합니다. Codex CLI 0.136.0은 같은 영역(에이전틱 코딩 CLI)이지만 이런 멀티-에이전트 primitive를 **사용자가 호출 가능한 표면으로 제공하지 않습니다** (`multi_agent`는 stable이나 도구 표면 미노출, `multi_agent_v2`/`enable_fanout`은 under development). 따라서 텍스트 번역만으로는 동작 불가.
 
 ### 2. 핵심 원리 — MCP 서버로 Agent Team 에뮬레이션
 
@@ -245,15 +262,15 @@ Codex의 MCP 클라이언트 지원을 활용해 **stdio MCP 서버**(`mcp-team-
 - **Codex 사용자**: `skills/`, `mcp-team-server/`, `AGENTS.md`, `.codex-plugin/` 만 사용
 - **Claude Code 개발자**: `.claude/`의 4-phase 빌드 파이프라인이 위 Codex 측 파일들을 자동 갱신 — **자기 자신을 빌드하는 self-hosting 메타-하네스**
 
-`.codex-plugin/`, `.agents/plugins/marketplace.json`, `.mcp.json`은 **현재 0.125.x에서 활성화 동작 없음 — forward-compat schema만**. canonical 활성화 경로는 `codex mcp add` + `~/.codex/skills/<name>/` 심링크입니다.
+canonical 설치 경로는 **`codex mcp add` + `~/.codex/skills/<name>/` 심링크**입니다. `.codex-plugin/`, `.agents/plugins/marketplace.json`, `.mcp.json`은 표준 마켓플레이스 install(`codex plugin marketplace add` → `codex plugin add`)의 등록 소스로, 레이아웃만 맞으면 `skills`·`mcpServers`(→`.mcp.json`, `${CODEX_PLUGIN_ROOT}` 자동 해소)를 자동 등록합니다. 다만 **codex 0.136 마켓 스캐너는 플러그인이 마켓 루트의 서브디렉토리에 있어야 해소**하는데 본 저장소는 루트==플러그인 레이아웃(`source.path:"./"`)이라 마켓 경로가 실패합니다([LIMITATIONS #15](LIMITATIONS.md)). 그래서 마켓은 `--marketplace` 옵트인(실패 시 심링크 자동 폴백)으로만 제공합니다.
 
 ## How it works — English summary
 
 `codex_harness` ports `revfactory/harness` (a Claude Code meta-skill that auto-designs agent teams + skills for any domain) to OpenAI Codex CLI. Codex lacks first-class multi-agent primitives, so the port emulates `TeamCreate` / `SendMessage` / `Task*` through a small stdio MCP server backed by SQLite (WAL).
 
-After installation, **trigger with natural language** ("build a harness for ..."). Codex 0.125.x's slash command surface (`/<name>`) is gated behind plugin marketplace install via the TUI, which the symlink-based install path used here does not exercise. Skills are activated through description matching instead.
+After installation, **trigger with natural language** ("build a harness for ..."). The slash command surface (`/<name>`) is not exposed because this plugin ships no `commands/` directory — neither the marketplace nor the symlink path registers slash commands. Skills are activated through description matching instead.
 
-The `.codex-plugin/`, `.agents/plugins/marketplace.json`, and `.mcp.json` files match the schema used by official OpenAI plugins (vercel, cloudflare) and are kept as **forward-compat only** — the canonical activation path on 0.125.x is `codex mcp add` + a symlink at `~/.codex/skills/<name>/`. Lossy translations are documented in [`LIMITATIONS.md`](LIMITATIONS.md) (11 items).
+The canonical install path is **`codex mcp add` + a symlink at `~/.codex/skills/<name>/`**. The `.codex-plugin/`, `.agents/plugins/marketplace.json`, and `.mcp.json` files match the schema used by official OpenAI plugins (vercel, cloudflare) and drive the standard marketplace install (`codex plugin marketplace add` → `codex plugin add`), which auto-registers `skills` and `mcpServers`→`.mcp.json` (with `${CODEX_PLUGIN_ROOT}` resolved) **when the layout matches**. However, the codex 0.136 marketplace scanner only resolves plugins in a **subdirectory** of the marketplace root, whereas this repo uses a root==plugin layout (`source.path:"./"`), so the marketplace path fails ([LIMITATIONS #15](LIMITATIONS.md)). The marketplace is therefore offered only as an `--marketplace` opt-in that auto-falls back to the symlink path. Lossy translations are documented in [`LIMITATIONS.md`](LIMITATIONS.md) (15 items).
 
 The repository is dual-runtime: it ships as a Codex plugin AND contains the Claude Code build pipeline (`.claude/`) that regenerates the Codex-side files when Codex CLI ships a new version.
 
@@ -314,16 +331,17 @@ codex_harness/
 └── _workspace/                      ← gitignored 중간 산출물
 ```
 
-> 이전 버전에 있던 루트 `agents/×5`와 `hooks/`는 **0.125.x에서 효과가 없어 제거**되었습니다 (`agents/`는 dev-time 페르소나, `hooks/`는 `plugin_hooks` under-development). `multi_agent_v2`/`enable_fanout`/`plugin_hooks`가 stable 전환되면 다시 도입 검토.
+> 이전 버전에 있던 루트 `agents/×5`와 `hooks/`는 **효과가 없어 제거**되었습니다 (`agents/`는 dev-time 페르소나). Codex 0.136에서 `codex_hooks`/`plugin_hooks` 플래그는 단일 `hooks`로 통합되고 `plugin_hooks`는 removed, hook은 trust-gated(`--dangerously-bypass-hook-trust`)가 되었습니다 — **본 플러그인은 hook을 미동봉**하므로 trust 마찰이 없습니다. `multi_agent_v2`/`enable_fanout`가 stable 전환되면 네이티브 fan-out 재도입 검토.
 
 ## Codex CLI 버전 호환성 / Version Compatibility
 
 | Codex CLI 버전 | 상태 |
 |---|---|
 | `< 0.125.0` | **미지원**. stable feature(`plugins=true`, `multi_agent=true`, `skill_mcp_dependency_install=true`, `~/.codex/skills/` 자동 스캔)가 없거나 다를 수 있음 |
-| `0.125.0` | **테스트 완료** — README의 모든 명령이 실측 검증됨 |
-| `0.128.0` | **smoke test 통과** (외부 검증). 활성화·MCP 등록·스킬 매칭 모두 동작. 새 schema/feature 변동은 미실측 |
-| `> 0.128.0` (미래) | 호환 가능성 높지만 미실측. 주의 영역: `codex plugin marketplace add` 동작, plugin.json schema, `codex mcp add` 인자 형식, `~/.codex/skills/` 자동 스캔 |
+| `0.125.0` | **최초 검증** — README의 모든 명령이 이 버전에서 실측 검증됨 (심링크 경로 기준) |
+| `0.128.0` | **smoke test 통과** (외부 검증). 활성화·MCP 등록·스킬 매칭 모두 동작 |
+| `0.136.0` | **테스트 완료 기준선** — 심링크 canonical 설치 + 0.125→0.136 delta 반영 (마켓플레이스 2단계는 opt-in, LIMITATIONS #15). 주의 영역: hook trust 모델, profile v2(별도 파일 오버레이), `default_permissions` 권한 계층 |
+| `> 0.136.0` (미래) | 호환 가능성 높지만 미실측. 주의 영역: `codex plugin marketplace add`/`plugin add` 동작, plugin.json schema, hook trust, profile v2, `~/.codex/skills/` 자동 스캔 |
 
 **업그레이드 시 권장 절차:**
 

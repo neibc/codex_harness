@@ -14,7 +14,7 @@ We will acknowledge receipt within a reasonable time and aim to publish a fix or
 In-scope concerns:
 
 - Vulnerabilities in the **MCP team-emulation server** (`mcp-team-server/`) — e.g. unsafe SQL, path traversal in storage paths, untrusted-input handling in tool arguments.
-- Plugin manifests (`.codex-plugin/plugin.json`, `.agents/plugins/marketplace.json`, `.mcp.json`) that could cause Codex to execute unexpected commands when installed (forward-compat schema; not active in 0.125.x).
+- Plugin manifests (`.codex-plugin/plugin.json`, `.agents/plugins/marketplace.json`, `.mcp.json`) that could cause Codex to execute unexpected commands when installed. On codex 0.136 the canonical install is `codex mcp add` + a `~/.codex/skills/` symlink; the marketplace path is opt-in and currently fails for this repo's root layout (see [`LIMITATIONS.md`](LIMITATIONS.md) §15). The `.mcp.json` `mcpServers` entry does auto-register when a marketplace install resolves, so treat it as an active execution surface.
 - Documentation that misleads users into running unsafe commands.
 
 Out of scope:
