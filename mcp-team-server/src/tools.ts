@@ -17,6 +17,7 @@ import type {
   TaskUpdateInput,
   TeamCreateInput,
   TeamDestroyInput,
+  TeamRow,
 } from "./types.js";
 
 const TOOLS: Tool[] = [
@@ -188,6 +189,24 @@ function asError(message: string): {
   };
 }
 
+// Team/member existence checks. Claude Code's Agent Team primitives reject
+// messages/tasks aimed at a team or member that does not exist; the emulation
+// must do the same, otherwise a mistyped team_id silently black-holes traffic.
+function requireActiveTeam(
+  storage: Storage,
+  team_id: string,
+): { team: TeamRow } | { error: string } {
+  const team = storage.getTeam(team_id);
+  if (!team || team.status === "archived") {
+    return { error: `team not found or archived: ${team_id}` };
+  }
+  return { team };
+}
+
+function unknownMember(team: TeamRow, name: string): boolean {
+  return !team.members.includes(name);
+}
+
 export function registerTeamTools(server: Server, storage: Storage): void {
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: TOOLS,
@@ -212,12 +231,25 @@ export function registerTeamTools(server: Server, storage: Storage): void {
               "send_message requires team_id, from, to, content",
             );
           }
+          const check = requireActiveTeam(storage, input.team_id);
+          if ("error" in check) return asError(check.error);
+          if (unknownMember(check.team, input.from)) {
+            return asError(`unknown member: ${input.from}`);
+          }
+          if (input.to !== "*" && unknownMember(check.team, input.to)) {
+            return asError(`unknown member: ${input.to}`);
+          }
           return asJsonResult(storage.sendMessage(input));
         }
         case "recv_messages": {
           const input = args as unknown as RecvMessagesInput;
           if (!input.team_id || !input.as) {
             return asError("recv_messages requires team_id and as");
+          }
+          const check = requireActiveTeam(storage, input.team_id);
+          if ("error" in check) return asError(check.error);
+          if (unknownMember(check.team, input.as)) {
+            return asError(`unknown member: ${input.as}`);
           }
           const messages = storage.recvMessages(input);
           return asJsonResult({ messages });
@@ -227,12 +259,22 @@ export function registerTeamTools(server: Server, storage: Storage): void {
           if (!input.team_id || !input.subject) {
             return asError("task_create requires team_id and subject");
           }
+          const check = requireActiveTeam(storage, input.team_id);
+          if ("error" in check) return asError(check.error);
+          if (input.owner && unknownMember(check.team, input.owner)) {
+            return asError(`unknown member: ${input.owner}`);
+          }
           return asJsonResult(storage.createTask(input));
         }
         case "task_update": {
           const input = args as unknown as TaskUpdateInput;
           if (!input.team_id || !input.task_id) {
             return asError("task_update requires team_id and task_id");
+          }
+          const check = requireActiveTeam(storage, input.team_id);
+          if ("error" in check) return asError(check.error);
+          if (input.owner && unknownMember(check.team, input.owner)) {
+            return asError(`unknown member: ${input.owner}`);
           }
           return asJsonResult(storage.updateTask(input));
         }
@@ -241,6 +283,8 @@ export function registerTeamTools(server: Server, storage: Storage): void {
           if (!input.team_id) {
             return asError("task_list requires team_id");
           }
+          const check = requireActiveTeam(storage, input.team_id);
+          if ("error" in check) return asError(check.error);
           return asJsonResult(storage.listTasks(input));
         }
         case "task_get_output": {
@@ -248,6 +292,8 @@ export function registerTeamTools(server: Server, storage: Storage): void {
           if (!input.team_id || !input.task_id) {
             return asError("task_get_output requires team_id and task_id");
           }
+          const check = requireActiveTeam(storage, input.team_id);
+          if ("error" in check) return asError(check.error);
           const result = storage.getTaskOutput(input);
           if (!result) return asError(`task not found: ${input.task_id}`);
           return asJsonResult(result);
@@ -256,6 +302,11 @@ export function registerTeamTools(server: Server, storage: Storage): void {
           const input = args as unknown as TeamDestroyInput;
           if (!input.team_id) {
             return asError("team_destroy requires team_id");
+          }
+          // Existence-only check: an archived team may still be hard-deleted,
+          // so we do not reject on status here — only on a missing team.
+          if (!storage.getTeam(input.team_id)) {
+            return asError(`team not found: ${input.team_id}`);
           }
           return asJsonResult(storage.destroyTeam(input));
         }

@@ -14,6 +14,7 @@ revfactory/harness(Claude Code 1.2.1) → Codex CLI 0.136.0 포팅 시 발생하
 - **완화:** 팀원 prompt에 "매 turn 시작 시 `recv_messages({since: <cursor>})` 호출" 명시.
   - `skills/harness/SKILL.md` 본문이 이 폴링 규칙을 강제한다.
   - 폴링 인터벌 지수 증가(1s → 2s → 4s, max 30s)로 부하 제어.
+- **수신자 검증(T19):** 원본 `SendMessage`처럼, 존재하지 않는 `team_id`나 팀 members에 없는 `to`/`from`으로 보내면 MCP 서버가 `isError`를 반환한다(과거에는 조용히 성공 → 메시지 블랙홀). `to:"*"` 브로드캐스트는 허용. 이로써 오타/파괴된 팀으로 인한 무한 대기가 조기에 드러난다.
 
 ## 2. 빌트인 subagent_type 카테고리 부재
 

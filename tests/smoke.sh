@@ -2,7 +2,7 @@
 # codex_harness — smoke test
 #
 # 통과 기준: codex CLI 설치 + mcp-team-server/dist/index.js 빌드 완료 상태에서
-# 1~9는 PASS, 10은 옵션. 빌드 미수행 시 [7]에서 안내 메시지.
+# 1~10은 PASS, 11은 옵션. 빌드 미수행 시 [8]에서 안내 메시지.
 #
 # 검증 대상: Codex CLI 0.136.0+. canonical 설치 = 심링크 + codex mcp add.
 #            (마켓플레이스 2단계는 codex 0.136 루트-레이아웃 미지원으로 옵트인 — LIMITATIONS #15)
@@ -21,14 +21,14 @@ fail() { printf "  \033[31mFAIL\033[0m %s\n" "$1"; FAIL=$((FAIL + 1)); }
 warn() { printf "  \033[33mWARN\033[0m %s\n" "$1"; }
 info() { printf "  ----  %s\n" "$1"; }
 
-echo "[1/10] codex CLI 존재"
+echo "[1/11] codex CLI 존재"
 if command -v codex >/dev/null 2>&1; then
   pass "codex --version: $(codex --version 2>/dev/null || echo unknown)"
 else
   warn "codex not in PATH — Codex CLI 미설치 환경. 일부 단계는 스킵됩니다."
 fi
 
-echo "[2/10] 매니페스트 / 메타파일 존재"
+echo "[2/11] 매니페스트 / 메타파일 존재"
 for f in \
   ".codex-plugin/plugin.json" \
   ".agents/plugins/marketplace.json" \
@@ -44,7 +44,7 @@ for f in \
   fi
 done
 
-echo "[3/10] plugin.json 필수 필드 (jq 가능 시)"
+echo "[3/11] plugin.json 필수 필드 (jq 가능 시)"
 PLUGIN_JSON="$HERE/.codex-plugin/plugin.json"
 if command -v jq >/dev/null 2>&1; then
   for k in name version description skills mcpServers license; do
@@ -66,7 +66,7 @@ else
   fi
 fi
 
-echo "[4/10] plugin.json 재포지셔닝 (keywords 17개 + 6패턴 description) + marketplace URL"
+echo "[4/11] plugin.json 재포지셔닝 (keywords 17개 + 6패턴 description) + marketplace URL"
 # keywords 17개 (T1)
 if command -v node >/dev/null 2>&1; then
   KW_COUNT=$(node -e "const m=require('$PLUGIN_JSON'); console.log((m.keywords||[]).length)" 2>/dev/null || echo 0)
@@ -94,7 +94,7 @@ else
   fail "marketplace.json websiteURL owner 오류 (revfactory 잔존 또는 neibc 부재)"
 fi
 
-echo "[5/10] 재사용 검토 섹션 이식 확인 (T7·T8·T9)"
+echo "[5/11] 재사용 검토 섹션 이식 확인 (T7·T8·T9)"
 if grep -q '3-0. 기존 에이전트 중복 검토' "$HERE/skills/harness/SKILL.md" \
    && grep -q '4-0. 기존 스킬 중복 검토' "$HERE/skills/harness/SKILL.md"; then
   pass "SKILL.md Phase 3-0/4-0 이식됨"
@@ -112,7 +112,7 @@ else
   fail "skill-writing-guide.md '스킬 재사용 설계' 누락"
 fi
 
-echo "[6/10] 설치 서사 canonical=심링크 정합 (T14·T15·T16)"
+echo "[6/11] 설치 서사 canonical=심링크 정합 (T14·T15·T16)"
 # install.sh: 기본 심링크 canonical + --marketplace 옵트인
 if grep -q 'MARKETPLACE_MODE=0' "$HERE/install.sh" \
    && grep -q -- '--marketplace) MARKETPLACE_MODE=1' "$HERE/install.sh"; then
@@ -145,7 +145,7 @@ else
   pass "mcp-team-server/README.md 0.136 canonical로 갱신됨"
 fi
 
-echo "[7/10] skills/ 트리"
+echo "[7/11] skills/ 트리"
 test -f "$HERE/skills/harness/SKILL.md" && pass "skills/harness/SKILL.md exists" || fail "skills/harness/SKILL.md missing"
 for ref in agent-design-patterns.md orchestrator-template.md team-examples.md \
            skill-writing-guide.md skill-testing-guide.md qa-agent-guide.md; do
@@ -156,7 +156,7 @@ for ref in agent-design-patterns.md orchestrator-template.md team-examples.md \
   fi
 done
 
-echo "[8/10] mcp-team-server 빌드 산출물"
+echo "[8/11] mcp-team-server 빌드 산출물"
 DIST="$HERE/mcp-team-server/dist/index.js"
 if [ -f "$DIST" ]; then
   pass "mcp-team-server/dist/index.js exists"
@@ -165,7 +165,7 @@ else
   warn "  cd mcp-team-server && npm install && npm run build"
 fi
 
-echo "[9/10] tools/list 응답에 8개 도구 포함 (빌드되어 있을 때만)"
+echo "[9/11] tools/list 응답에 8개 도구 포함 (빌드되어 있을 때만)"
 if [ -f "$DIST" ] && command -v node >/dev/null 2>&1; then
   RESP=$(printf '{"jsonrpc":"2.0","id":1,"method":"tools/list"}\n' \
     | node "$DIST" 2>/dev/null \
@@ -186,13 +186,32 @@ else
   warn "[9] 스킵 — dist/index.js 또는 node 부재"
 fi
 
-echo "[10/10] (옵션) Codex 통합 — 사용자 환경 부작용 가능, 기본 비활성화"
+echo "[10/11] 팀/멤버 존재 검증 회귀 가드 (T19)"
+# 정적 가드: tools.ts 핸들러에 검증 코드가 존재하는가
+TOOLS_TS="$HERE/mcp-team-server/src/tools.ts"
+if grep -q 'requireActiveTeam' "$TOOLS_TS" && grep -q 'unknown member' "$TOOLS_TS"; then
+  pass "tools.ts 팀/멤버 검증 코드 존재 (requireActiveTeam + unknown member)"
+else
+  fail "tools.ts 팀/멤버 검증 코드 부재 — 결함 회귀 가능"
+fi
+# 동적 가드: 서버를 stdio 기동해 정상 라운드트립 + 잘못된 team_id/멤버 isError 확인
+if [ -f "$DIST" ] && command -v node >/dev/null 2>&1; then
+  if node "$HERE/tests/mcp_guard.mjs"; then
+    pass "mcp_guard.mjs 5/5 (정상 라운드트립 + bad team_id/member isError)"
+  else
+    fail "mcp_guard.mjs 실패 — 팀/멤버 검증 회귀"
+  fi
+else
+  warn "[10] 동적 가드 스킵 — dist/index.js 또는 node 부재 (정적 가드는 수행됨)"
+fi
+
+echo "[11/11] (옵션) Codex 통합 — 사용자 환경 부작용 가능, 기본 비활성화"
 if [ "${CODEX_HARNESS_SMOKE_INTEGRATION:-0}" = "1" ]; then
   if command -v codex >/dev/null 2>&1; then
     info "codex mcp list (registered MCP servers):"
     codex mcp list || warn "codex mcp list failed"
   else
-    warn "[10] codex CLI 부재 — 옵션 단계 스킵"
+    warn "[11] codex CLI 부재 — 옵션 단계 스킵"
   fi
 else
   info "set CODEX_HARNESS_SMOKE_INTEGRATION=1 to run codex mcp list (인스톨 부작용 가능)"

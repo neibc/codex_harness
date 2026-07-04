@@ -33,6 +33,10 @@ mcp-team-server/
 
 상세 schema는 `src/tools.ts`와 [`../skills/harness/SKILL.md`](../skills/harness/SKILL.md) 참조.
 
+### 팀/멤버 존재 검증
+
+`send_message`/`recv_messages`/`task_create`/`task_update`/`task_list`/`task_get_output`는 진입 시 팀 존재를 검증한다 — 팀이 없거나 archived면 `isError` 응답(`team not found or archived: <id>`). 또한 멤버명(`send_message`의 `from`/`to`, `recv_messages`의 `as`, `task_create`/`task_update`의 `owner`)이 팀 members에 없으면 `isError`(`unknown member: <name>`)이며, 단 `to:"*"` 브로드캐스트는 허용된다. `team_destroy`는 미존재 팀에 `isError`(`team not found: <id>`)를 주되 archived 팀의 hard-delete는 허용한다. 이는 Claude Code 원본 `SendMessage`가 잘못된 수신자에 에러를 주는 동작을 에뮬레이션하기 위함이다(도구명·스키마·정상 응답 형태는 불변, 에러 경로만 추가).
+
 ## 빌드
 
 ```bash
