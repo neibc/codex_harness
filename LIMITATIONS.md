@@ -109,10 +109,11 @@ revfactory/harness(Claude Code 1.2.1) → Codex CLI 0.136.0 포팅 시 발생하
 - **영향:** 미세 권한(#6)의 Codex 측 표면이 한 겹 더 생겼으나 스키마 미확정.
 - **완화:** 하네스는 config를 직접 쓰지 않음 → 현재 무영향. `--strict-config` 사용 시 미인식 필드 에러 주의.
 
-## 14. goals feature (stable&true) 미채택
+## 14. goals feature (stable&true) 미채택 — 실측 완료, 중첩 없음 확정
 
-- 0.136 `goals`=stable&true이나 표면/스키마 Unknown(01 §5 Q7). 하네스 Task* 대체 근거 불충분.
-- **현재:** MCP 팀서버 task_* 유지. 표면 실측 시 재검토(03 §3.1 거절 기록).
+- 0.136 `goals`=stable&true. **스키마 실측(2026-07-05, `~/.codex/goals_1.sqlite` 읽기 전용):** 테이블 `thread_goals(thread_id PK, goal_id, objective, status ∈ {active, paused, blocked, usage_limited, budget_limited, complete}, token_budget, tokens_used, time_used_seconds, ...)`. CLI 서브커맨드 없음(`codex goals` 미인식).
+- **판정:** goals는 **스레드(세션) 단위 목표·토큰예산 추적기**다. 하네스의 task_*(에이전트 간 작업 할당·상태 전이·의존성)와 개념 중첩 없음 → 대체 후보 아님. 관찰 종결.
+- **현재:** MCP 팀서버 task_* 유지 (03 §3.1 거절 기록 확정).
 
 ## 15. 마켓플레이스 스캐너의 서브디렉토리 전제 vs 듀얼-네이처 루트 레이아웃 (0.136 실측)
 

@@ -45,4 +45,4 @@ mcp-team-server/node_modules/
 mcp-team-server/dist/
 ```
 
-> 산출물 자체(`prompts/`, `agents/`, `mcp-team-server/src/`, `AGENTS.md`, `plugin.toml`, `tests/`)는 git 커밋 대상 — 그것이 곧 배포되는 Codex 플러그인이다. 빌더의 컴파일 산출물(`mcp-team-server/dist/`)만 ignore.
+> 산출물 자체(`skills/`, `mcp-team-server/src/`, `AGENTS.md`, `.codex-plugin/plugin.json`, `.agents/plugins/marketplace.json`, `install.sh`, `bin/`, `tests/`)는 git 커밋 대상 — 그것이 곧 배포되는 Codex 플러그인이다. 빌더의 컴파일 산출물(`mcp-team-server/dist/`)만 ignore (사용자 머신에서 install.sh가 tsc 빌드).

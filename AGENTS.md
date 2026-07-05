@@ -42,7 +42,7 @@ codex exec "<요청>"
 
 ## 알려진 손실 / 한계
 
-Claude Code 원본의 일부 primitive는 Codex 등가로 대체되었다. 15개 손실 항목 — [`LIMITATIONS.md`](LIMITATIONS.md).
+Claude Code 원본의 일부 primitive는 Codex 등가로 대체되었다. 15개 손실 항목 — [`LIMITATIONS.md`](LIMITATIONS.md). MCP 팀 서버가 왜 필요한지·미등록 시 열화·codex 네이티브 표면 출시 시 대응은 [`docs/team-emulation-dependency.md`](docs/team-emulation-dependency.md) 참조.
 
 핵심 요지:
 - `SendMessage` 동기 도착 통지 → polling

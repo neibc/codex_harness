@@ -56,6 +56,8 @@ ai-roadmap-research/
 
 ## 🚀 설치 / Install
 
+> 최단 경로 5단계 요약은 [`docs/quickstart.md`](docs/quickstart.md) 참조. 아래는 설치 옵션의 정본입니다.
+
 ### 한 줄 설치 (권장 / recommended)
 
 ```bash
@@ -314,6 +316,7 @@ Claude Code는 `SendMessage` 도착 즉시 수신자가 깨어난다(runtime sch
 codex_harness/
 ├── README.md, LICENSE, AGENTS.md, CLAUDE.md
 ├── LIMITATIONS.md, CONTRIBUTING.md, SECURITY.md
+├── docs/                            ← quickstart, team-emulation-dependency
 ├── install.sh                       ← 한 줄 설치
 ├── bin/update.sh                    ← 자동 업데이트
 ├── .codex-plugin/plugin.json        ← 표준 plugin manifest (forward-compat)
@@ -357,6 +360,7 @@ Codex 새 버전 회귀는 [`CONTRIBUTING.md`](CONTRIBUTING.md)의 회귀 절차
 
 ## 기여 / Contributing · 라이선스 / License · 감사 / Acknowledgements
 
+- 문서: [`docs/quickstart.md`](docs/quickstart.md) (5분 설치 워크스루), [`docs/team-emulation-dependency.md`](docs/team-emulation-dependency.md) (MCP 팀 서버 의존성)
 - 기여 가이드: [`CONTRIBUTING.md`](CONTRIBUTING.md), 보안 신고: [`SECURITY.md`](SECURITY.md), 변환 손실: [`LIMITATIONS.md`](LIMITATIONS.md)
 - License: [Apache-2.0](LICENSE) (원본 [`revfactory/harness`](https://github.com/revfactory/harness)와 동일)
 - Acknowledgements:

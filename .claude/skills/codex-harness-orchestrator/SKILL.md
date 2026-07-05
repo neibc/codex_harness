@@ -1,6 +1,6 @@
 ---
 name: codex-harness-orchestrator
-description: revfactory의 Claude Code harness 플러그인을 OpenAI Codex CLI 호환 플러그인으로 포팅하는 전체 워크플로우를 조율하는 오케스트레이터. Codex 분석 → revfactory 인벤토리 → 매핑 설계 → MCP 팀 서버 + 프롬프트 빌드 → QA 검증을 자동화한다. "codex 하네스 포팅", "harness를 codex로 변환", "codex용 plugin 빌드", "MCP 팀 서버 만들기", 또는 프로젝트 루트의 Codex 플러그인 트리(prompts/, agents/, mcp-team-server/, plugin.toml, AGENTS.md 등)를 다시 실행/업데이트/수정/보완/재빌드하는 모든 후속 요청에서 반드시 사용. 부분 재실행, 결과 개선, 새 입력 기반 재빌드까지 처리.
+description: revfactory의 Claude Code harness 플러그인을 OpenAI Codex CLI 호환 플러그인으로 포팅하는 전체 워크플로우를 조율하는 오케스트레이터. Codex 분석 → revfactory 인벤토리 → 매핑 설계 → MCP 팀 서버 + 프롬프트 빌드 → QA 검증을 자동화한다. "codex 하네스 포팅", "harness를 codex로 변환", "codex용 plugin 빌드", "MCP 팀 서버 만들기", 또는 프로젝트 루트의 Codex 플러그인 트리(skills/, mcp-team-server/, .codex-plugin/, AGENTS.md 등)를 다시 실행/업데이트/수정/보완/재빌드하는 모든 후속 요청에서 반드시 사용. 부분 재실행, 결과 개선, 새 입력 기반 재빌드까지 처리.
 ---
 
 # Codex Harness Orchestrator
@@ -106,11 +106,11 @@ TaskCreate({ subject: "Populate Codex plugin tree at project root", owner: "code
 빌더가 모호점 발견 시 SendMessage로 번역가에게 질의 → 빌더가 산출물 생성 → `_workspace/04_build_log.md`에 stub/TODO 목록 명시.
 
 **Acceptance:**
-- 루트 `prompts/harness.md`, `prompts/codex-harness-orchestrator.md` 존재 (placeholder 아님)
-- 루트 `agents/` 에 5개 페르소나 파일 존재
-- 루트 `mcp-team-server/`에 `package.json` + `src/` + tsconfig 등 빌드 가능한 코드 존재
-- 루트 `tests/smoke.sh`가 placeholder 아닌 실제 검증 로직
-- 루트 `AGENTS.md`, `plugin.toml`이 placeholder 아닌 실제 내용
+- 루트 `skills/harness/SKILL.md` + `references/` 6종 존재 (placeholder 아님)
+- 루트 `.codex-plugin/plugin.json`, `.agents/plugins/marketplace.json` 존재 및 상호 동조 (이름/버전/포지셔닝)
+- 루트 `mcp-team-server/`에 `package.json` + `src/` + tsconfig 등 빌드 가능한 코드 존재 (`npm run build` 통과)
+- 루트 `tests/smoke.sh`가 placeholder 아닌 실제 검증 로직 (실행 PASS)
+- 루트 `AGENTS.md`, `install.sh`, `bin/update.sh`가 현행 설치 절차(심링크 canonical, marketplace는 `--marketplace` 옵트인)와 일치
 
 팀 정리: `TeamDelete({team_name: "build-team"})`.
 
@@ -156,12 +156,12 @@ QA가 `_workspace/05_qa_report.md` 생성. 블로킹 이슈 발견 시 오케스
 - [ ] `_workspace/05_qa_report.md`
 - [ ] 루트 `README.md` (설치 절차 갱신됨, placeholder 아님)
 - [ ] 루트 `AGENTS.md` (placeholder 아님)
-- [ ] 루트 `plugin.toml` (실측 schema 반영)
+- [ ] 루트 `.codex-plugin/plugin.json` (실측 schema 반영) + `.agents/plugins/marketplace.json` (동조)
 - [ ] 루트 `LIMITATIONS.md` (lossy-conversions 결과)
-- [ ] 루트 `prompts/` (`.gitkeep` 제거 + 실제 prompt 파일들)
-- [ ] 루트 `agents/` (`.gitkeep` 제거 + 실제 페르소나 파일들)
+- [ ] 루트 `skills/harness/` (SKILL.md + references/ 6종)
+- [ ] 루트 `install.sh` + `bin/update.sh` (심링크 canonical, marketplace `--marketplace` 옵트인)
 - [ ] 루트 `mcp-team-server/` (`package.json`, `src/`, `tsconfig.json` 등)
-- [ ] 루트 `tests/smoke.sh` (실제 검증)
+- [ ] 루트 `tests/smoke.sh` (실제 검증) + `tests/mcp_guard.mjs`
 
 ## 테스트 시나리오
 
